@@ -2,39 +2,48 @@
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
+    this.linesCount = 0;
+    this.topScore = 251160;
+    this.currentScore = 16512;
   }
 
   create() {
     const { width, height } = this.cameras.main;
     const boardWidth = 10;
     const boardHeight = 20;
-    const blockSize = 30;
+    const blockSize = 15;
     const gameWidth = boardWidth * blockSize;
     const gameHeight = boardHeight * blockSize;
     const offsetX = (width - gameWidth) / 2;
-    const offsetY = 100;
+    const offsetY = 20;
+    const gap = 20;
 
     // Add background color
     this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
 
     // Create the lines box
-    const linesBox = this.add.rectangle(offsetX, offsetY, gameWidth, 40, 0xff8c00);
-    const linesLabel = this.add.text(offsetX + 10, offsetY + 10, 'LINES-', {
-      fontFamily: 'ThugLife',
-      fontSize: '24px',
-      fill: '#ffffff',
-    });
-    const linesValue = this.add.text(offsetX + gameWidth - 10, offsetY + 10, '000', {
-      fontFamily: 'ThugLife',
-      fontSize: '24px',
-      fill: '#ffffff',
-      align: 'right',
-    });
+    const linesBoxWidth = 160;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX;
+    const linesBoxY = offsetY;
+    this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const linesTextColor = '#ffffff';
+    const linesTextSize = '18px';
+    const paddedLinesCount = String(this.linesCount).padStart(3, '0');
+    const linesText = ` LINES - ${paddedLinesCount}`;
+    
+    const lines = this.add.text(linesBoxX + 10, linesBoxY + 7, linesText, {
+        fontFamily: 'Courier New',
+        fontSize: linesTextSize,
+        fill: linesTextColor,
+    }).setOrigin(0);
 
     // Create the game board
+    const gameBoardX = linesBoxX;
+    const gameBoardY = linesBoxY + linesBoxHeight + gap;
     const gameBoard = this.add.grid(
-      offsetX,
-      offsetY + 50,
+      gameBoardX,
+      gameBoardY,
       gameWidth,
       gameHeight,
       blockSize,
@@ -43,71 +52,81 @@ export default class GameScene extends Phaser.Scene {
       0,
       0xffffff,
       1
-    );
+    ).setOrigin(0);
 
     // Create the top score and current score box
-    const scoreBoxWidth = 150;
-    const scoreBoxHeight = 100;
-    const scoreBoxX = offsetX + gameWidth + 20;
-    const scoreBoxY = offsetY;
-    const scoreBox = this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xff8c00);
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = gameBoardX + gameWidth + gap;
+    const scoreBoxY = gameBoardY;
+    this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const scoreTextColor = '#ffffff';
+    const scoreTextSize = '14px';
     const topScoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'TOP', {
-      fontFamily: 'ThugLife',
-      fontSize: '18px',
-      fill: '#ffffff',
-    });
-    const topScoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 10, '252160', {
-      fontFamily: 'ThugLife',
-      fontSize: '18px',
-      fill: '#ffffff',
-      align: 'right',
-    });
-    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 50, 'SCORE', {
-      fontFamily: 'ThugLife',
-      fontSize: '18px',
-      fill: '#ffffff',
-    });
-    const scoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 50, '165120', {
-      fontFamily: 'ThugLife',
-      fontSize: '18px',
-      fill: '#ffffff',
-      align: 'right',
-    });
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    
+
+    const paddedTopScore = String(this.topScore).padStart(7, '0');
+    const topScoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + 10, paddedTopScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+
+    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + 20, 'SCORE', {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    console.log(scoreLabel);
+    const paddedCurrentScore = String(this.currentScore).padStart(7, '0');
+    const scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + scoreLabel.height + 20, paddedCurrentScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
 
     // Create the next box
     const nextBoxWidth = scoreBoxWidth;
-    const nextBoxHeight = 120;
+    const nextBoxHeight = 80;
     const nextBoxX = scoreBoxX;
-    const nextBoxY = scoreBoxY + scoreBoxHeight + 20;
-    const nextBox = this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xff8c00);
-    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 20, 'NEXT', {
-      fontFamily: 'ThugLife',
-      fontSize: '18px',
-      fill: '#ffffff',
+    const nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const nextTextColor = '#ffffff';
+    const nextTextSize = '14px';
+    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 10, 'NEXT', {
+      fontFamily: 'Courier New',
+      fontSize: nextTextSize,
+      fill: nextTextColor,
     }).setOrigin(0.5);
     const nextPreview = this.add.rectangle(
       nextBoxX + nextBoxWidth / 2,
       nextBoxY + nextBoxHeight / 2,
       nextBoxWidth - 20,
-      nextBoxHeight - 40,
+      nextBoxHeight - 20,
       0x000000
     ).setOrigin(0.5);
 
     // Create the level box
     const levelBoxWidth = scoreBoxWidth;
-    const levelBoxHeight = 80;
+    const levelBoxHeight = 60;
     const levelBoxX = scoreBoxX;
-    const levelBoxY = nextBoxY + nextBoxHeight + 20;
-    const levelBox = this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xff8c00);
-    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 20, 'LEVEL', {
-      fontFamily: 'ThugLife',
-      fontSize: '18px',
-      fill: '#ffffff',
+    const levelBoxY = nextBoxY + nextBoxHeight + gap;
+    this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const levelTextColor = '#ffffff';
+    const levelTextSize = '14px';
+    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'Courier New',
+      fontSize: levelTextSize,
+      fill: levelTextColor,
     }).setOrigin(0.5);
-    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 50, '15', {
-      fontFamily: 'ThugLife',
-      fontSize: '24px',
-      fill: '#ffffff',
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, '15', {
+      fontFamily: 'Courier New',
+      fontSize: '18px',
+      fill: levelTextColor,
     }).setOrigin(0.5);
   }
 }

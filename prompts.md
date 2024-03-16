@@ -1512,3 +1512,656 @@ In this updated code:
 Please review the updated code and let me know if it meets your expectations. If you have any further suggestions or improvements, feel free to let me know.
 
 **User:**
+
+Could you modify the code to follow this approach:
+Here's a step-by-step strategy to help align the blocks:
+
+1. Determine Sizes and Offsets:
+    - You need to decide on the sizes of the blocks that make up the layout: the Lines block, the Game Board, the Top/Score block, the Next block, and the Level block.
+    - Given your screen size of 800x600 and the Game Board dimensions of 10x20 squares, you've chosen a blockSize of 30. This makes the Game Board 300x600 pixels.
+    - The offsets will determine the space between the blocks and the border of the screen.
+2. Calculate the Layout:
+    - The Game Board is central, so place it with an equal margin on both sides horizontally.
+    - For the Lines, Top/Score, Next, and Level blocks, they need to be aligned vertically and positioned either to the left or right of the Game Board.
+3. Alignment:
+    - You can align the blocks to the right of the Game Board with a constant offset.
+    - Since the Game Board's right edge is at offsetX + gameWidth, the left edge of the next block to the right can be offsetX + gameWidth + gap, where gap is the horizontal space you want between the blocks.
+4. Vertical Spacing:
+    - The vertical space between the Top/Score, Next, and Level blocks can be a fixed amount to make it visually appealing.
+
+**Assistant:**
+
+Thank you for providing the step-by-step strategy. I'll modify the code according to your approach. Here's the updated `GameScene.js` code:
+
+```javascript
+// GameScene.js
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+  }
+
+  create() {
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const blockSize = 30;
+    const gameWidth = boardWidth * blockSize;
+    const gameHeight = boardHeight * blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 100;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 150;
+    const linesBoxHeight = 40;
+    const linesBoxX = offsetX - linesBoxWidth - gap;
+    const linesBoxY = offsetY;
+    const linesBox = this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xff8c00);
+    const linesLabel = this.add.text(linesBoxX + 10, linesBoxY + 10, 'LINES-', {
+      fontFamily: 'ThugLife',
+      fontSize: '24px',
+      fill: '#ffffff',
+    });
+    const linesValue = this.add.text(linesBoxX + linesBoxWidth - 10, linesBoxY + 10, '000', {
+      fontFamily: 'ThugLife',
+      fontSize: '24px',
+      fill: '#ffffff',
+      align: 'right',
+    });
+
+    // Create the game board
+    const gameBoard = this.add.grid(
+      offsetX,
+      offsetY,
+      gameWidth,
+      gameHeight,
+      blockSize,
+      blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    );
+
+    // Create the top score and current score box
+    const scoreBoxWidth = 150;
+    const scoreBoxHeight = 100;
+    const scoreBoxX = offsetX + gameWidth + gap;
+    const scoreBoxY = offsetY;
+    const scoreBox = this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xff8c00);
+    const topScoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'TOP', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+    });
+    const topScoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 10, '252160', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+      align: 'right',
+    });
+    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 50, 'SCORE', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+    });
+    const scoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 50, '165120', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+      align: 'right',
+    });
+
+    // Create the next box
+    const nextBoxWidth = scoreBoxWidth;
+    const nextBoxHeight = 120;
+    const nextBoxX = scoreBoxX;
+    const nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    const nextBox = this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xff8c00);
+    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 20, 'NEXT', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+    }).setOrigin(0.5);
+    const nextPreview = this.add.rectangle(
+      nextBoxX + nextBoxWidth / 2,
+      nextBoxY + nextBoxHeight / 2,
+      nextBoxWidth - 20,
+      nextBoxHeight - 40,
+      0x000000
+    ).setOrigin(0.5);
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 80;
+    const levelBoxX = scoreBoxX;
+    const levelBoxY = nextBoxY + nextBoxHeight + gap;
+    const levelBox = this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xff8c00);
+    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 20, 'LEVEL', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+    }).setOrigin(0.5);
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 50, '15', {
+      fontFamily: 'ThugLife',
+      fontSize: '24px',
+      fill: '#ffffff',
+    }).setOrigin(0.5);
+  }
+}
+```
+
+In this updated code:
+
+1. Sizes and Offsets:
+   - The sizes of the blocks are defined as constants (e.g., `linesBoxWidth`, `scoreBoxWidth`, etc.).
+   - The Game Board dimensions are calculated based on the `boardWidth`, `boardHeight`, and `blockSize`.
+   - The `offsetX` and `offsetY` variables determine the position of the Game Board.
+   - The `gap` constant defines the horizontal and vertical space between the blocks.
+
+2. Layout Calculation:
+   - The Game Board is positioned at `offsetX` and `offsetY`, ensuring an equal margin on both sides horizontally.
+   - The Lines box is positioned to the left of the Game Board with a horizontal gap defined by `gap`.
+   - The Top/Score, Next, and Level boxes are positioned to the right of the Game Board with the same horizontal gap.
+
+3. Alignment:
+   - The Top/Score box is aligned with the top-right corner of the Game Board, offset by the `gap` value.
+   - The Next box is positioned below the Top/Score box with a vertical gap defined by `gap`.
+   - The Level box is positioned below the Next box with the same vertical gap.
+
+4. Vertical Spacing:
+   - The vertical spacing between the Top/Score, Next, and Level boxes is defined by the `gap` constant to maintain consistent spacing.
+
+Please review the updated code and let me know if it aligns with your expectations. If you have any further suggestions or improvements, feel free to let me know.
+
+**User:**
+
+Could you adjust the board square to actually be half the size only 15px?
+
+**Assistant:**
+
+Certainly! I'll adjust the `blockSize` to 15px and update the code accordingly. Here's the modified `GameScene.js` code:
+
+```javascript
+// GameScene.js
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+  }
+
+  create() {
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const blockSize = 15;
+    const gameWidth = boardWidth * blockSize;
+    const gameHeight = boardHeight * blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 100;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 100;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX - linesBoxWidth - gap;
+    const linesBoxY = offsetY;
+    const linesBox = this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xff8c00);
+    const linesLabel = this.add.text(linesBoxX + 10, linesBoxY + 7, 'LINES-', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+    });
+    const linesValue = this.add.text(linesBoxX + linesBoxWidth - 10, linesBoxY + 7, '000', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+      align: 'right',
+    });
+
+    // Create the game board
+    const gameBoard = this.add.grid(
+      offsetX,
+      offsetY,
+      gameWidth,
+      gameHeight,
+      blockSize,
+      blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    );
+
+    // Create the top score and current score box
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = offsetX + gameWidth + gap;
+    const scoreBoxY = offsetY;
+    const scoreBox = this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xff8c00);
+    const topScoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'TOP', {
+      fontFamily: 'ThugLife',
+      fontSize: '14px',
+      fill: '#ffffff',
+    });
+    const topScoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 10, '252160', {
+      fontFamily: 'ThugLife',
+      fontSize: '14px',
+      fill: '#ffffff',
+      align: 'right',
+    });
+    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 40, 'SCORE', {
+      fontFamily: 'ThugLife',
+      fontSize: '14px',
+      fill: '#ffffff',
+    });
+    const scoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 40, '165120', {
+      fontFamily: 'ThugLife',
+      fontSize: '14px',
+      fill: '#ffffff',
+      align: 'right',
+    });
+
+    // Create the next box
+    const nextBoxWidth = scoreBoxWidth;
+    const nextBoxHeight = 80;
+    const nextBoxX = scoreBoxX;
+    const nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    const nextBox = this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xff8c00);
+    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 10, 'NEXT', {
+      fontFamily: 'ThugLife',
+      fontSize: '14px',
+      fill: '#ffffff',
+    }).setOrigin(0.5);
+    const nextPreview = this.add.rectangle(
+      nextBoxX + nextBoxWidth / 2,
+      nextBoxY + nextBoxHeight / 2,
+      nextBoxWidth - 20,
+      nextBoxHeight - 20,
+      0x000000
+    ).setOrigin(0.5);
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 60;
+    const levelBoxX = scoreBoxX;
+    const levelBoxY = nextBoxY + nextBoxHeight + gap;
+    const levelBox = this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xff8c00);
+    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'ThugLife',
+      fontSize: '14px',
+      fill: '#ffffff',
+    }).setOrigin(0.5);
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, '15', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: '#ffffff',
+    }).setOrigin(0.5);
+  }
+}
+```
+
+In this updated code:
+
+- The `blockSize` is set to 15px, which will make the game board squares half the size of the original 30px.
+- The `gameWidth` and `gameHeight` are adjusted accordingly based on the new `blockSize`.
+- The sizes of the Lines, Top/Score, Next, and Level boxes are also reduced to maintain proportions with the smaller game board.
+- The font sizes of the labels and values are decreased to fit within the smaller boxes.
+
+Please note that reducing the block size may affect the overall layout and spacing of the elements. You may need to further adjust the positions and sizes of the boxes and labels to achieve the desired visual appearance.
+
+Let me know if you have any further questions or if you'd like to make any additional changes to the layout.
+
+**User:**
+
+It is still misaligned. The GAME BOARD is at the top of the screen instead of being under the LINES block. The LINES block is in the middle and to the left of the board. I would like to get rid of the orange-filled rectangles and simply add a light blue bounding box around all 5 blocks. Please locate separate chunks of code for each block to make it easy for me to change the values and position them myself by adjusting the values and seeing how they move relative to each other. Do the same for the text color and size, as I might change them to fit in the boxes.
+
+**Assistant:**
+
+I apologize for the confusion. Let's update the code to position the blocks correctly and remove the orange-filled rectangles. I'll separate the code chunks for each block and provide variables for easy adjustments. Here's the updated `GameScene.js` code:
+
+```javascript
+// GameScene.js
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+  }
+
+  create() {
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const blockSize = 15;
+    const gameWidth = boardWidth * blockSize;
+    const gameHeight = boardHeight * blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 100;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 100;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX;
+    const linesBoxY = offsetY;
+    this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xffffff, 0.2);
+    const linesTextColor = '#ffffff';
+    const linesTextSize = '18px';
+    const linesLabel = this.add.text(linesBoxX + 10, linesBoxY + 7, 'LINES-', {
+      fontFamily: 'ThugLife',
+      fontSize: linesTextSize,
+      fill: linesTextColor,
+    });
+    const linesValue = this.add.text(linesBoxX + linesBoxWidth - 10, linesBoxY + 7, '000', {
+      fontFamily: 'ThugLife',
+      fontSize: linesTextSize,
+      fill: linesTextColor,
+      align: 'right',
+    });
+
+    // Create the game board
+    const gameBoardX = offsetX;
+    const gameBoardY = linesBoxY + linesBoxHeight + gap;
+    const gameBoard = this.add.grid(
+      gameBoardX,
+      gameBoardY,
+      gameWidth,
+      gameHeight,
+      blockSize,
+      blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    );
+
+    // Create the top score and current score box
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = offsetX + gameWidth + gap;
+    const scoreBoxY = gameBoardY;
+    this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xffffff, 0.2);
+    const scoreTextColor = '#ffffff';
+    const scoreTextSize = '14px';
+    const topScoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'TOP', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    });
+    const topScoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 10, '252160', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+      align: 'right',
+    });
+    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 40, 'SCORE', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    });
+    const scoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 40, '165120', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+      align: 'right',
+    });
+
+    // Create the next box
+    const nextBoxWidth = scoreBoxWidth;
+    const nextBoxHeight = 80;
+    const nextBoxX = scoreBoxX;
+    const nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xffffff, 0.2);
+    const nextTextColor = '#ffffff';
+    const nextTextSize = '14px';
+    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 10, 'NEXT', {
+      fontFamily: 'ThugLife',
+      fontSize: nextTextSize,
+      fill: nextTextColor,
+    }).setOrigin(0.5);
+    const nextPreview = this.add.rectangle(
+      nextBoxX + nextBoxWidth / 2,
+      nextBoxY + nextBoxHeight / 2,
+      nextBoxWidth - 20,
+      nextBoxHeight - 20,
+      0x000000
+    ).setOrigin(0.5);
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 60;
+    const levelBoxX = scoreBoxX;
+    const levelBoxY = nextBoxY + nextBoxHeight + gap;
+    this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2);
+    const levelTextColor = '#ffffff';
+    const levelTextSize = '14px';
+    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'ThugLife',
+      fontSize: levelTextSize,
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, '15', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+
+    // Add light blue bounding box around all blocks
+    const boundingBoxPadding = 10;
+    const boundingBoxX = linesBoxX - boundingBoxPadding;
+    const boundingBoxY = linesBoxY - boundingBoxPadding;
+    const boundingBoxWidth = scoreBoxX + scoreBoxWidth + boundingBoxPadding * 2 - linesBoxX;
+    const boundingBoxHeight = levelBoxY + levelBoxHeight + boundingBoxPadding * 2 - linesBoxY;
+    this.add.rectangle(boundingBoxX, boundingBoxY, boundingBoxWidth, boundingBoxHeight, 0x87ceeb, 0.5);
+  }
+}
+```
+
+In this updated code:
+
+- The game board is positioned below the lines box with a gap defined by the `gap` variable.
+- The orange-filled rectangles are removed, and light blue rectangles with an opacity of 0.2 are added around each block.
+- The code for each block is separated into chunks for easy adjustments.
+- Variables for text color and size are introduced for each block, allowing you to change them easily.
+- A light blue bounding box is added around all the blocks using the `boundingBoxPadding` variable to control the padding.
+
+You can now adjust the positions, sizes, and text properties of each block by modifying the corresponding variables. The blocks will move relative to each other based on the changes you make.
+
+Feel free to experiment with the values and see how the blocks and text respond. Let me know if you have any further questions or if you need assistance with fine-tuning the layout.
+
+**User:**
+
+I think all the elements are still misaligned, but I think I've pinpointed the source of the confusion. All the elements have their X and Y coordinates set at the center of the element, not at the top-left corner. This is likely causing all of the boxes and elements to be misaligned.
+
+For example, the text from the LINES box should be positioned as follows:
+
+```javascript
+const linesLabel = this.add.text(
+      linesBoxX - linesBoxWidth / 2 + 10, 
+      linesBoxY - linesBoxHeight / 2 + 7,
+      'LINES-', ....)
+```
+
+instead of
+
+```javascript
+const linesLabel = this.add.text(
+      linesBoxX + 10, 
+      linesBoxY + 7,
+      'LINES-', ....)
+```
+
+Also, don't forget that Phaser uses a Cartesian coordinate system with an inverted Y-axis.
+
+Furthermore, all blocks should have a rectangle with the following color and opacity: `0xffffff, 0.2`.
+
+Additionally, the gap between all boxes, both horizontal and vertical, should be consistent and set to 20px. Please make all these changes to the latest version of the code, taking my suggestions into account, and then provide me with the file.
+
+**Assistant:**
+
+I apologize for the confusion. Thank you for pinpointing the issue with the alignment. I'll update the code to position the elements based on their top-left corner and make the necessary adjustments to ensure proper alignment. Here's the updated `GameScene.js` code:
+
+```javascript
+// GameScene.js
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+  }
+
+  create() {
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const blockSize = 15;
+    const gameWidth = boardWidth * blockSize;
+    const gameHeight = boardHeight * blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 100;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 100;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX;
+    const linesBoxY = offsetY;
+    this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const linesTextColor = '#ffffff';
+    const linesTextSize = '18px';
+    const linesLabel = this.add.text(linesBoxX + 10, linesBoxY + 7, 'LINES-', {
+      fontFamily: 'ThugLife',
+      fontSize: linesTextSize,
+      fill: linesTextColor,
+    }).setOrigin(0);
+    const linesValue = this.add.text(linesBoxX + linesBoxWidth - 10, linesBoxY + 7, '000', {
+      fontFamily: 'ThugLife',
+      fontSize: linesTextSize,
+      fill: linesTextColor,
+      align: 'right',
+    }).setOrigin(1, 0);
+
+    // Create the game board
+    const gameBoardX = linesBoxX;
+    const gameBoardY = linesBoxY + linesBoxHeight + gap;
+    const gameBoard = this.add.grid(
+      gameBoardX,
+      gameBoardY,
+      gameWidth,
+      gameHeight,
+      blockSize,
+      blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    ).setOrigin(0);
+
+    // Create the top score and current score box
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = gameBoardX + gameWidth + gap;
+    const scoreBoxY = gameBoardY;
+    this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const scoreTextColor = '#ffffff';
+    const scoreTextSize = '14px';
+    const topScoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'TOP', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    const topScoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 10, '252160', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+      align: 'right',
+    }).setOrigin(1, 0);
+    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 40, 'SCORE', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    const scoreValue = this.add.text(scoreBoxX + scoreBoxWidth - 10, scoreBoxY + 40, '165120', {
+      fontFamily: 'ThugLife',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+      align: 'right',
+    }).setOrigin(1, 0);
+
+    // Create the next box
+    const nextBoxWidth = scoreBoxWidth;
+    const nextBoxHeight = 80;
+    const nextBoxX = scoreBoxX;
+    const nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const nextTextColor = '#ffffff';
+    const nextTextSize = '14px';
+    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 10, 'NEXT', {
+      fontFamily: 'ThugLife',
+      fontSize: nextTextSize,
+      fill: nextTextColor,
+    }).setOrigin(0.5);
+    const nextPreview = this.add.rectangle(
+      nextBoxX + nextBoxWidth / 2,
+      nextBoxY + nextBoxHeight / 2,
+      nextBoxWidth - 20,
+      nextBoxHeight - 20,
+      0x000000
+    ).setOrigin(0.5);
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 60;
+    const levelBoxX = scoreBoxX;
+    const levelBoxY = nextBoxY + nextBoxHeight + gap;
+    this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const levelTextColor = '#ffffff';
+    const levelTextSize = '14px';
+    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'ThugLife',
+      fontSize: levelTextSize,
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, '15', {
+      fontFamily: 'ThugLife',
+      fontSize: '18px',
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+
+    // Add light blue bounding box around all blocks
+    const boundingBoxPadding = 10;
+    const boundingBoxX = linesBoxX - boundingBoxPadding;
+    const boundingBoxY = linesBoxY - boundingBoxPadding;
+    const boundingBoxWidth = scoreBoxX + scoreBoxWidth + boundingBoxPadding * 2 - linesBoxX;
+    const boundingBoxHeight = levelBoxY + levelBoxHeight + boundingBoxPadding * 2 - linesBoxY;
+    this.add.rectangle(boundingBoxX, boundingBoxY, boundingBoxWidth, boundingBoxHeight, 0x87ceeb, 0.5);
+  }
+}
+```
+
+In this updated code:
+
+- The elements are positioned based on their top-left corner using the `setOrigin(0)` method.
+- The `linesLabel` and `linesValue` are positioned relative to the top-left corner of the lines box.
+- The game board is positioned relative to the top-left corner of the lines box with a gap of 20px.
+- All boxes have a rectangle with the color `0xffffff` and opacity `0.2`.
+- The gap between all boxes, both horizontally and vertically, is set to 20px.
+- The `setOrigin()` method is used to align the text elements within their respective boxes.
+
+Please review the updated code and let me know if it aligns with your expectations. If you have any further suggestions or adjustments, feel free to let me know.
+
+**User:**
+
+I fix a few things in the code.
+I deleted the light blue bounding box around all blocks, because it was set wrongly and it was not necessary.
+I changed the font from 'ThugLife' to 'Courier New'.
+
+ Here's the updated `GameScene.js` file:
