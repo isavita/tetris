@@ -1,10 +1,12 @@
+import config from './config.js';
 import SplashScene from './scenes/SplashScene.js';
-import MenuScene from './scenes/MenuScene.js';
-import GameScene from './scenes/GameScene.js';
 
-const config = {
-  // ... game configuration
-  scene: [SplashScene, MenuScene, GameScene]
+const gameConfig = {
+  type: Phaser.AUTO,
+  width: config.width,
+  height: config.height,
+  parent: 'game-container',
+  scene: [SplashScene],
 };
 
-const game = new Phaser.Game(config);
+new Phaser.Game(gameConfig);

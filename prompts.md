@@ -180,3 +180,77 @@ This `config.js` file exports an object with the game's width and height. You ca
 With these files in place, you should now see the game canvas with the splash scene background image when you open the `index.html` file in a web browser.
 
 Next, we'll start implementing the `SplashScene` to display the game title and handle the transition to the `MenuScene`.
+
+**User:**
+
+Thank you! I applied all the changes. I also changed the CDN to point to phaser@v3.80.1 instead of phaser@3.55.2 because this is the newest version. I added the following link tag: `<link rel="icon" type="image/png" sizes="64x64" href="assets/images/favicon64x64.png">`. Let's continue with implementing the SplashScene and adding the assets/images/splashSceneBackground.png image. I am attaching the splashSceneBackground.png image to have ideas on how it looks.
+![splashSceneBackground image](assets/images/splashSceneBackground.png)
+
+**Assistant:**
+
+Great! Let's implement the `SplashScene` and add the `splashSceneBackground.png` image to the game.
+
+First, make sure the `splashSceneBackground.png` image is placed in the `assets/images` folder.
+
+Now, open the `SplashScene.js` file in the `src/scenes` folder and add the following code:
+
+```javascript
+// SplashScene.js
+export default class SplashScene extends Phaser.Scene {
+  constructor() {
+    super('SplashScene');
+  }
+
+  preload() {
+    this.load.image('splashBackground', 'assets/images/splashSceneBackground.png');
+  }
+
+  create() {
+    this.add.image(0, 0, 'splashBackground').setOrigin(0);
+
+    const titleText = this.add.text(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      'TETRIS',
+      {
+        font: '128px Arial',
+        fill: '#ffffff',
+      }
+    );
+    titleText.setOrigin(0.5);
+
+    this.time.delayedCall(2000, () => {
+      this.scene.start('MenuScene');
+    });
+  }
+}
+```
+
+In the `SplashScene`:
+
+- We define a constructor and call `super('SplashScene')` to set the scene key.
+
+- In the `preload` method, we load the `splashSceneBackground.png` image using `this.load.image()` and assign it a key of `'splashBackground'`.
+
+- In the `create` method:
+  - We add the splash background image to the scene using `this.add.image()`, positioning it at (0, 0) and setting its origin to the top-left corner.
+  - We add the "TETRIS" title text using `this.add.text()`, positioning it at the center of the screen using `this.cameras.main.centerX` and `this.cameras.main.centerY`. We set the font size to 128 pixels and the fill color to white.
+  - We use `this.time.delayedCall()` to wait for 2000 milliseconds (2 seconds) before starting the `'MenuScene'` using `this.scene.start('MenuScene')`.
+
+Make sure to import the `SplashScene` in the `game.js` file:
+
+```javascript
+// game.js
+import config from './config.js';
+import SplashScene from './scenes/SplashScene.js';
+
+// ... rest of the game configuration and initialization code
+```
+
+With these changes, when you run the game, you should see the splash screen with the background image and the "TETRIS" title text. After 2 seconds, the game will automatically transition to the `MenuScene` (which we'll implement next).
+
+The provided `splashSceneBackground.png` image looks great and fits well with the game's theme. The blue grid pattern and the "TETRIS" logo in the center create a visually appealing splash screen.
+
+Next, let's move on to implementing the `MenuScene` where the player can click a start button to begin the game.
+
+**User:**
