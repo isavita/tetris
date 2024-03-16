@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'ThugLifeItalic';
+    src: url('ThugLifeItalicTTF.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'ThugLife';
+    src: url('ThugLifeTTF.ttf') format('truetype');
+}
