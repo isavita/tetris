@@ -254,3 +254,79 @@ The provided `splashSceneBackground.png` image looks great and fits well with th
 Next, let's move on to implementing the `MenuScene` where the player can click a start button to begin the game.
 
 **User:**
+
+The image already contains the text "TETRIS", so we don't need to add any extra text. Also, the screen size is 800x600, but the image is 1024x1024. We can resize it to fit better in the frame, as there is some extra space on the sides anyway. Could you upscale it to adjust appropriately? I also adjusted the `this.time.delayedCall` to be after 3s instead of 2s. What is the difference between using `this.time.delayedCall` and using the `update` method in combination with a check that the time is >3000, for example, to handle the transition to the `MenuScene`?
+
+**Assistant:**
+
+Apologies for the confusion. Since the splash background image already contains the "TETRIS" text, we don't need to add it separately. Let's update the `SplashScene` to resize the background image to fit the screen size of 800x600 and adjust the delay to 3 seconds.
+
+Here's the updated `SplashScene.js` code:
+
+```javascript
+// SplashScene.js
+export default class SplashScene extends Phaser.Scene {
+  constructor() {
+    super('SplashScene');
+  }
+
+  preload() {
+    this.load.image('splashBackground', 'assets/images/splashSceneBackground.png');
+  }
+
+  create() {
+    const backgroundImage = this.add.image(0, 0, 'splashBackground').setOrigin(0);
+    const scaleX = this.cameras.main.width / backgroundImage.width;
+    const scaleY = this.cameras.main.height / backgroundImage.height;
+    backgroundImage.setScale(scaleX, scaleY);
+
+    this.time.delayedCall(3000, () => {
+      this.scene.start('MenuScene');
+    });
+  }
+}
+```
+
+In the updated code:
+
+- We create the background image using `this.add.image()` and store it in the `backgroundImage` variable.
+- We calculate the scale factors `scaleX` and `scaleY` by dividing the screen width and height by the background image's width and height, respectively.
+- We set the scale of the background image using `backgroundImage.setScale(scaleX, scaleY)` to make it fit the screen size.
+- We adjust the delay to 3000 milliseconds (3 seconds) in `this.time.delayedCall()`.
+
+Regarding the difference between using `this.time.delayedCall()` and using the `update()` method with a time check:
+
+- `this.time.delayedCall()` is a built-in Phaser method that allows you to execute a callback function after a specified delay. It is a convenient way to handle delayed actions without the need for manual time tracking. The delayed call is automatically managed by Phaser's time system.
+
+- Using the `update()` method with a time check involves manually tracking the elapsed time and checking if it exceeds a certain threshold. You would need to store the start time and compare it with the current time in each frame update. This approach gives you more control over the timing logic but requires additional code to manage the time tracking.
+
+Here's an example of how you could use the `update()` method with a time check:
+
+```javascript
+// SplashScene.js
+export default class SplashScene extends Phaser.Scene {
+  constructor() {
+    super('SplashScene');
+    this.startTime = 0;
+  }
+
+  // ... preload() and create() methods ...
+
+  update(time) {
+    if (time - this.startTime > 3000) {
+      this.scene.start('MenuScene');
+    }
+  }
+
+  create() {
+    // ... background image setup ...
+    this.startTime = this.time.now;
+  }
+}
+```
+
+In this approach, we store the start time in the `startTime` property when the scene is created. In the `update()` method, we compare the current time (`time`) with the start time and check if the difference exceeds 3000 milliseconds (3 seconds). If the condition is met, we start the `MenuScene`.
+
+Both approaches achieve the same result, but using `this.time.delayedCall()` is generally more straightforward and recommended for simple delayed actions.
+
+Let me know if you have any further questions!
