@@ -2724,3 +2724,165 @@ Tests:       1 failed, 1 total
 ```
 
 Let's fix the implementation of the `GameEngine` class to make the test pass.
+
+**Assistant:**
+
+To make the test pass, let's update the `GameEngine` class to initialize the game state correctly. Here's the updated `GameEngine.js` file:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  constructor() {
+    this.board = this.createEmptyBoard();
+    this.currentPiece = null;
+    this.nextPiece = null;
+    this.score = 0;
+    this.level = 1;
+    this.linesCleared = 0;
+  }
+
+  createEmptyBoard() {
+    const rows = 20;
+    const columns = 10;
+    return Array(rows).fill(null).map(() => Array(columns).fill(0));
+  }
+}
+```
+
+In the updated `GameEngine` class:
+
+- The `constructor` initializes the game state properties:
+  - `board` is set to an empty board created by the `createEmptyBoard` method.
+  - `currentPiece` and `nextPiece` are initialized to `null`.
+  - `score`, `level`, and `linesCleared` are initialized to their respective default values.
+
+- The `createEmptyBoard` method creates and returns an empty game board:
+  - It takes the number of rows and columns as constants (you can adjust these values based on your game requirements).
+  - It uses `Array(rows).fill(null)` to create an array of the specified number of rows.
+  - It then maps each row to a new array of the specified number of columns filled with `0` (representing an empty cell).
+
+With these changes, the `GameEngine` class should now have the expected properties initialized correctly.
+
+Run your tests again using the `npm test` command, and the test should pass:
+
+```
+ PASS  src/__tests__/GameEngine.test.js
+  GameEngine
+    ✓ initializes the game state correctly (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+```
+
+The test now verifies that the `GameEngine` instance has the expected properties (`board`, `currentPiece`, `nextPiece`, `score`, `level`, and `linesCleared`) defined and initialized with the correct values.
+
+You can now proceed with adding more tests for other methods of the `GameEngine` class and implementing them incrementally to ensure the desired behavior.
+
+Let me know if you have any further questions or if you'd like to continue with adding more tests and implementations!
+
+**User:**
+
+Thank you for your help. The test is passing now. Let's continue with the next test. I would like to add a test for the `movePiece` method. Please provide me with a basic test for this method.
+
+**Assistant:**
+
+Sure! Let's add a test for the `movePiece` method in the `GameEngine` class. The `movePiece` method should take a direction as a parameter and move the current piece accordingly on the game board.
+
+Here's a basic test for the `movePiece` method:
+
+```javascript
+// GameEngine.test.js
+import GameEngine from '../scenes/GameEngine';
+
+describe('GameEngine', () => {
+  let gameEngine;
+
+  beforeEach(() => {
+    gameEngine = new GameEngine();
+  });
+
+  test('initializes the game state correctly', () => {
+    // ... (previous test)
+  });
+
+  test('moves the current piece in the specified direction', () => {
+    // Set up a sample current piece
+    gameEngine.currentPiece = {
+      shape: [
+        [1, 1],
+        [1, 1],
+      ],
+      position: { x: 3, y: 0 },
+    };
+
+    // Move the piece to the right
+    gameEngine.movePiece('right');
+
+    // Check if the piece's position is updated correctly
+    expect(gameEngine.currentPiece.position.x).toBe(4);
+
+    // Move the piece to the left
+    gameEngine.movePiece('left');
+
+    // Check if the piece's position is updated correctly
+    expect(gameEngine.currentPiece.position.x).toBe(3);
+
+    // Move the piece down
+    gameEngine.movePiece('down');
+
+    // Check if the piece's position is updated correctly
+    expect(gameEngine.currentPiece.position.y).toBe(1);
+  });
+});
+```
+
+In this test:
+
+1. We set up a sample current piece (`gameEngine.currentPiece`) with a simple shape and initial position.
+
+2. We call the `movePiece` method with the direction 'right' and then check if the piece's horizontal position (`position.x`) is updated correctly by incrementing it by 1.
+
+3. We call the `movePiece` method with the direction 'left' and check if the piece's horizontal position is updated correctly by decrementing it by 1.
+
+4. We call the `movePiece` method with the direction 'down' and check if the piece's vertical position (`position.y`) is updated correctly by incrementing it by 1.
+
+This test verifies that the `movePiece` method updates the position of the current piece correctly based on the provided direction.
+
+To make the test pass, you'll need to implement the `movePiece` method in the `GameEngine` class. Here's a basic implementation:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  // ... (constructor and other methods)
+
+  movePiece(direction) {
+    const { x, y } = this.currentPiece.position;
+
+    switch (direction) {
+      case 'left':
+        this.currentPiece.position.x = x - 1;
+        break;
+      case 'right':
+        this.currentPiece.position.x = x + 1;
+        break;
+      case 'down':
+        this.currentPiece.position.y = y + 1;
+        break;
+      default:
+        break;
+    }
+  }
+}
+```
+
+In this implementation, the `movePiece` method updates the position of the current piece based on the provided direction. It modifies the `position.x` or `position.y` property of the `currentPiece` accordingly.
+
+Please note that this is a basic implementation and doesn't include collision detection or boundary checks. You'll need to enhance the `movePiece` method to handle those cases as well.
+
+Run the tests again using the `npm test` command, and both the initialization and movement tests should pass.
+
+Let me know if you have any further questions or if you'd like to proceed with adding more tests and implementations for other methods!
+
+**User:**
+
+Thank you! The test is passing now. I would like to add a test for the `rotatePiece` method. Please provide me with a basic test for this method.
