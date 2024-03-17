@@ -3593,3 +3593,85 @@ Let me know if you have any further questions or if you'd like to proceed with t
 Thank you! This worked perfectly. Could you now add logic for the `movePiece` method to handle collision detection when moving down? I would like to ensure that the piece stops moving down when it collides with the bottom of the board.
 
 **Assistant:**
+
+Certainly! Let's add logic to the `movePiece` method to handle collision detection when moving down and ensure that the piece stops moving when it collides with the bottom of the board.
+
+First, let's add a test case to verify this behavior:
+
+```javascript
+// GameEngine.test.js
+import GameEngine from '../scenes/GameEngine';
+
+describe('GameEngine', () => {
+  // ... (previous tests)
+
+  describe('movePiece', () => {
+    // ... (previous movePiece tests)
+
+    test('stops the piece from moving down when it collides with the bottom of the board', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 0, y: 18 },
+      };
+
+      gameEngine.movePiece('down');
+
+      expect(gameEngine.currentPiece.position.y).toBe(18);
+    });
+  });
+});
+```
+
+In this test case, we set up a scenario where the current piece is near the bottom of the board (at y-position 18). We attempt to move the piece down and expect its y-position to remain unchanged since it should collide with the bottom of the board.
+
+Now, let's update the `movePiece` method in the `GameEngine` class to handle collision detection when moving down:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  // ... (constructor and other methods)
+
+  movePiece(direction) {
+    const { x, y } = this.currentPiece.position;
+    const cols = this.currentPiece.shape[0].length;
+    const rows = this.currentPiece.shape.length;
+
+    switch (direction) {
+      case 'left':
+        if (x > 0) {
+          this.currentPiece.position.x = x - 1;
+        }
+        break;
+      case 'right':
+        if (x + cols < this.board[0].length) {
+          this.currentPiece.position.x = x + 1;
+        }
+        break;
+      case 'down':
+        if (y + rows < this.board.length) {
+          this.currentPiece.position.y = y + 1;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+```
+
+In the updated `movePiece` method, we add a check in the 'down' case to ensure that the piece does not move beyond the bottom of the board. We compare the current y-position plus the height of the piece (`y + rows`) with the height of the board (`this.board.length`). If the piece would go beyond the bottom of the board, we don't update its position, effectively stopping its downward movement.
+
+Now, when you run the tests using the `npm test` command, all the tests should pass, including the new test case for collision detection when moving down.
+
+This logic ensures that the piece stops moving down when it collides with the bottom of the board. However, it's important to note that this is a basic collision detection and does not handle collisions with other pieces on the board yet. That would require additional logic to check the cells of the game board array for occupied positions.
+
+Feel free to add more test cases to cover different scenarios and edge cases related to collision detection when moving down.
+
+Let me know if you have any further questions or if you'd like to proceed with testing and implementing other methods in the `GameEngine` class!
+
+**User:**
+
+Thank you this worked. Now could you implement collision detection with other pieces on the board? I would like to ensure that the current piece stops moving down when it collides with other pieces on the board. For example if it has on its right side another piece, it should not be able to move to the right. Please provide me with a basic test for this and allow movement when the pieces do not collide due to specific shape and having empty cells between them.

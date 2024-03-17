@@ -22,23 +22,39 @@ export default class GameEngine {
 
     switch (direction) {
       case 'left':
-        if (x > 0) {
+        if (x > 0 && !this.checkCollision(x - 1, y)) {
           this.currentPiece.position.x = x - 1;
         }
         break;
       case 'right':
-        if (x + cols < this.board[0].length) {
+        if (x + cols < this.board[0].length && !this.checkCollision(x + 1, y)) {
           this.currentPiece.position.x = x + 1;
         }
         break;
       case 'down':
-        if (y + rows < this.board.length) {
+        if (y + rows < this.board.length && !this.checkCollision(x, y + 1)) {
           this.currentPiece.position.y = y + 1;
         }
         break;
       default:
         break;
     }
+  }
+  
+  checkCollision(x, y) {
+    const shape = this.currentPiece.shape;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col] && this.board[y + row][x + col]) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   rotatePiece(clockwise = true) {

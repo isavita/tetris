@@ -17,35 +17,174 @@ describe('GameEngine', () => {
     expect(gameEngine.linesCleared).toBe(0);
   });
 
-  test('moves the current piece in the specified direction', () => {
-    // Set up a sample current piece
-    gameEngine.currentPiece = {
-      shape: [
-        [1, 1],
-        [1, 1],
-      ],
-      position: { x: 3, y: 0 },
-    };
 
-    // Move the piece to the right
-    gameEngine.movePiece('right');
+  describe('movePiece', () => {
+    test('moves the current piece in the specified direction', () => {
+      // Set up a sample current piece
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 3, y: 0 },
+      };
 
-    // Check if the piece's position is updated correctly
-    expect(gameEngine.currentPiece.position.x).toBe(4);
+      // Move the piece to the right
+      gameEngine.movePiece('right');
 
-    // Move the piece to the left
-    gameEngine.movePiece('left');
+      // Check if the piece's position is updated correctly
+      expect(gameEngine.currentPiece.position.x).toBe(4);
 
-    // Check if the piece's position is updated correctly
-    expect(gameEngine.currentPiece.position.x).toBe(3);
+      // Move the piece to the left
+      gameEngine.movePiece('left');
 
-    // Move the piece down
-    gameEngine.movePiece('down');
+      // Check if the piece's position is updated correctly
+      expect(gameEngine.currentPiece.position.x).toBe(3);
 
-    // Check if the piece's position is updated correctly
-    expect(gameEngine.currentPiece.position.y).toBe(1);
+      // Move the piece down
+      gameEngine.movePiece('down');
+
+      // Check if the piece's position is updated correctly
+      expect(gameEngine.currentPiece.position.y).toBe(1);
+    });
+
+
+    test('stops the piece from moving down when it collides with another piece', () => {
+      gameEngine.board = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+      ];
+
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 4, y: 0 },
+      };
+
+      gameEngine.movePiece('down');
+      gameEngine.movePiece('down');
+
+      expect(gameEngine.currentPiece.position.y).toBe(0);
+    });
+
+    test('allows the piece to move horizontally when there is no collision', () => {
+      gameEngine.board = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+      ];
+
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(2);
+    });
+
+    test('does not move the piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 8, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(8);
+    });
+
+    test('does not move the I-shaped piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the I-shaped piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 6, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(6);
+    });
+
+    test('does not move the T-shaped piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1, 1],
+          [0, 1, 0],
+        ],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the T-shaped piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1, 1],
+          [0, 1, 0],
+        ],
+        position: { x: 7, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(7);
+    });
+
+    test('stops the piece from moving down when it collides with the bottom of the board', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 0, y: 18 },
+      };
+
+      gameEngine.movePiece('down');
+
+      expect(gameEngine.currentPiece.position.y).toBe(18);
+    });
   });
-
 
   describe('rotatePiece', () => {
     test('rotates the current piece clockwise', () => {
@@ -144,99 +283,6 @@ describe('GameEngine', () => {
         [1, 1],
         [0, 1],
       ]);
-    });
-
-    test('does not move the piece off the board to the left', () => {
-      gameEngine.currentPiece = {
-        shape: [
-          [1, 1],
-          [1, 1],
-        ],
-        position: { x: 0, y: 0 },
-      };
-
-      gameEngine.movePiece('left');
-
-      expect(gameEngine.currentPiece.position.x).toBe(0);
-    });
-
-    test('does not move the piece off the board to the right', () => {
-      gameEngine.currentPiece = {
-        shape: [
-          [1, 1],
-          [1, 1],
-        ],
-        position: { x: 8, y: 0 },
-      };
-
-      gameEngine.movePiece('right');
-
-      expect(gameEngine.currentPiece.position.x).toBe(8);
-    });
-
-    test('does not move the I-shaped piece off the board to the left', () => {
-      gameEngine.currentPiece = {
-        shape: [[1, 1, 1, 1]],
-        position: { x: 0, y: 0 },
-      };
-
-      gameEngine.movePiece('left');
-
-      expect(gameEngine.currentPiece.position.x).toBe(0);
-    });
-
-    test('does not move the I-shaped piece off the board to the right', () => {
-      gameEngine.currentPiece = {
-        shape: [[1, 1, 1, 1]],
-        position: { x: 6, y: 0 },
-      };
-
-      gameEngine.movePiece('right');
-
-      expect(gameEngine.currentPiece.position.x).toBe(6);
-    });
-
-
-    test('does not move the T-shaped piece off the board to the left', () => {
-      gameEngine.currentPiece = {
-        shape: [
-          [1, 1, 1],
-          [0, 1, 0],
-        ],
-        position: { x: 0, y: 0 },
-      };
-
-      gameEngine.movePiece('left');
-
-      expect(gameEngine.currentPiece.position.x).toBe(0);
-    });
-
-    test('does not move the T-shaped piece off the board to the right', () => {
-      gameEngine.currentPiece = {
-        shape: [
-          [1, 1, 1],
-          [0, 1, 0],
-        ],
-        position: { x: 7, y: 0 },
-      };
-
-      gameEngine.movePiece('right');
-
-      expect(gameEngine.currentPiece.position.x).toBe(7);
-    });
-
-    test('stops the piece from moving down when it collides with the bottom of the board', () => {
-      gameEngine.currentPiece = {
-        shape: [
-          [1, 1],
-          [1, 1],
-        ],
-        position: { x: 0, y: 18 },
-      };
-
-      gameEngine.movePiece('down');
-
-      expect(gameEngine.currentPiece.position.y).toBe(18);
     });
   });
 });
