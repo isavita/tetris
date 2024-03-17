@@ -2,6 +2,7 @@
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
+    this.gameEngine = new GameEngine();
     this.linesCount = 0;
     this.topScore = 251160;
     this.currentScore = 16512;
@@ -130,5 +131,14 @@ export default class GameScene extends Phaser.Scene {
       fontSize: '18px',
       fill: levelTextColor,
     }).setOrigin(0.5);
+  }
+
+  update() {
+  }
+
+  drawBoard() {
+  }
+
+  drawPiece() {
   }
 }
