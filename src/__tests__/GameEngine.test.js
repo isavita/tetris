@@ -45,4 +45,105 @@ describe('GameEngine', () => {
     // Check if the piece's position is updated correctly
     expect(gameEngine.currentPiece.position.y).toBe(1);
   });
+
+
+  describe('rotatePiece', () => {
+    test('rotates the current piece clockwise', () => {
+      // Set up a sample current piece
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 0],
+          [1, 1],
+          [0, 1],
+        ],
+        position: { x: 3, y: 0 },
+      };
+
+      // Rotate the piece clockwise
+      gameEngine.rotatePiece();
+
+      // Check if the piece's shape is rotated correctly
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [0, 1, 1],
+        [1, 1, 0],
+      ]);
+
+      // Rotate the piece clockwise again
+      gameEngine.rotatePiece();
+
+      // Check if the piece's shape is rotated correctly
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [1, 0],
+        [1, 1],
+        [0, 1],
+      ]);
+    });
+
+    test('rotates the I-shaped piece clockwise', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1, 1, 1],
+        ],
+        position: { x: 3, y: 0 },
+      };
+
+      gameEngine.rotatePiece();
+
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [1],
+        [1],
+        [1],
+        [1],
+      ]);
+
+      gameEngine.rotatePiece();
+
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [1, 1, 1, 1],
+      ]);
+    });
+
+    test('rotates the T-shaped piece clockwise', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [0, 1, 0],
+          [1, 1, 1],
+        ],
+        position: { x: 3, y: 0 },
+      };
+
+      gameEngine.rotatePiece();
+
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [1, 0],
+        [1, 1],
+        [1, 0],
+      ]);
+    });
+    test('rotates the current piece counterclockwise', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 0],
+          [1, 1],
+          [0, 1],
+        ],
+        position: { x: 3, y: 0 },
+      };
+
+      gameEngine.rotatePiece(false);
+
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [0, 1, 1],
+        [1, 1, 0],
+      ]);
+
+      gameEngine.rotatePiece(false);
+
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [1, 0],
+        [1, 1],
+        [0, 1],
+      ]);
+    });
+  });
 });

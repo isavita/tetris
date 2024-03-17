@@ -32,4 +32,30 @@ export default class GameEngine {
         break;
     }
   }
+
+  rotatePiece(clockwise = true) {
+    const rotatedShape = [];
+    const rows = this.currentPiece.shape.length;
+    const cols = this.currentPiece.shape[0].length;
+
+    if (clockwise) {
+      for (let col = 0; col < cols; col++) {
+        const newRow = [];
+        for (let row = rows - 1; row >= 0; row--) {
+          newRow.push(this.currentPiece.shape[row][col]);
+        }
+        rotatedShape.push(newRow);
+      }
+    } else {
+      for (let col = cols - 1; col >= 0; col--) {
+        const newRow = [];
+        for (let row = 0; row < rows; row++) {
+          newRow.push(this.currentPiece.shape[row][col]);
+        }
+        rotatedShape.push(newRow);
+      }
+    }
+
+    this.currentPiece.shape = rotatedShape;
+  }
 }
