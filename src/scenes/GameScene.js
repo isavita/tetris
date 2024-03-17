@@ -5,6 +5,7 @@ export default class GameScene extends Phaser.Scene {
     this.linesCount = 0;
     this.topScore = 251160;
     this.currentScore = 16512;
+    this.level = 0;
   }
 
   create() {
@@ -104,15 +105,15 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
     const nextPreview = this.add.rectangle(
       nextBoxX + nextBoxWidth / 2,
-      nextBoxY + nextBoxHeight / 2,
-      nextBoxWidth - 20,
-      nextBoxHeight - 20,
-      0x000000
+      nextBoxY + nextBoxHeight / 2 + 5,
+      nextBoxWidth - 30,
+      nextBoxHeight - 30,
+      0xfff000,
     ).setOrigin(0.5);
 
     // Create the level box
     const levelBoxWidth = scoreBoxWidth;
-    const levelBoxHeight = 60;
+    const levelBoxHeight = 50;
     const levelBoxX = scoreBoxX;
     const levelBoxY = nextBoxY + nextBoxHeight + gap;
     this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2).setOrigin(0);
@@ -123,7 +124,8 @@ export default class GameScene extends Phaser.Scene {
       fontSize: levelTextSize,
       fill: levelTextColor,
     }).setOrigin(0.5);
-    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, '15', {
+    const levelStr = String(this.level);
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, levelStr, {
       fontFamily: 'Courier New',
       fontSize: '18px',
       fill: levelTextColor,

@@ -2160,8 +2160,156 @@ Please review the updated code and let me know if it aligns with your expectatio
 
 **User:**
 
-I fix a few things in the code.
-I deleted the light blue bounding box around all blocks, because it was set wrongly and it was not necessary.
-I changed the font from 'ThugLife' to 'Courier New'.
+I've fixed a few things in the code. I removed the light blue bounding box around all blocks because it was incorrectly set and unnecessary. I also changed the font from 'ThugLife' to 'Courier New', but I'm open to switching to a font that is more widely available and closer to the NES Tetris original font.
 
- Here's the updated `GameScene.js` file:
+I have already added a few instance variables for tracking `this.level`, `this.currentScore`, `this.linesCount` and will be using them to track the score in the future.
+
+Here's the updated `GameScene.js` file:
+
+```javascript
+// GameScene.js
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+    this.linesCount = 0;
+    this.topScore = 251160;
+    this.currentScore = 16512;
+    this.level = 0;
+  }
+
+  create() {
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const blockSize = 15;
+    const gameWidth = boardWidth * blockSize;
+    const gameHeight = boardHeight * blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 20;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 160;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX;
+    const linesBoxY = offsetY;
+    this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const linesTextColor = '#ffffff';
+    const linesTextSize = '18px';
+    const paddedLinesCount = String(this.linesCount).padStart(3, '0');
+    const linesText = ` LINES - ${paddedLinesCount}`;
+    
+    const lines = this.add.text(linesBoxX + 10, linesBoxY + 7, linesText, {
+        fontFamily: 'Courier New',
+        fontSize: linesTextSize,
+        fill: linesTextColor,
+    }).setOrigin(0);
+
+    // Create the game board
+    const gameBoardX = linesBoxX;
+    const gameBoardY = linesBoxY + linesBoxHeight + gap;
+    const gameBoard = this.add.grid(
+      gameBoardX,
+      gameBoardY,
+      gameWidth,
+      gameHeight,
+      blockSize,
+      blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    ).setOrigin(0);
+
+    // Create the top score and current score box
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = gameBoardX + gameWidth + gap;
+    const scoreBoxY = gameBoardY;
+    this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const scoreTextColor = '#ffffff';
+    const scoreTextSize = '14px';
+    const topScoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'TOP', {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    
+
+    const paddedTopScore = String(this.topScore).padStart(7, '0');
+    const topScoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + 10, paddedTopScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+
+    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + 20, 'SCORE', {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    console.log(scoreLabel);
+    const paddedCurrentScore = String(this.currentScore).padStart(7, '0');
+    const scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + scoreLabel.height + 20, paddedCurrentScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+
+    // Create the next box
+    const nextBoxWidth = scoreBoxWidth;
+    const nextBoxHeight = 80;
+    const nextBoxX = scoreBoxX;
+    const nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const nextTextColor = '#ffffff';
+    const nextTextSize = '14px';
+    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 10, 'NEXT', {
+      fontFamily: 'Courier New',
+      fontSize: nextTextSize,
+      fill: nextTextColor,
+    }).setOrigin(0.5);
+    const nextPreview = this.add.rectangle(
+      nextBoxX + nextBoxWidth / 2,
+      nextBoxY + nextBoxHeight / 2 + 5,
+      nextBoxWidth - 30,
+      nextBoxHeight - 30,
+      0xfff000,
+    ).setOrigin(0.5);
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 50;
+    const levelBoxX = scoreBoxX;
+    const levelBoxY = nextBoxY + nextBoxHeight + gap;
+    this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const levelTextColor = '#ffffff';
+    const levelTextSize = '14px';
+    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'Courier New',
+      fontSize: levelTextSize,
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+    const levelStr = String(this.level);
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, levelStr, {
+      fontFamily: 'Courier New',
+      fontSize: '18px',
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+  }
+}
+```
+
+Let's move on to implementing the game logic. Before we start making any code changes, let's lay out a plan for how we can implement the following parts:
+1. Draw all Tetris elements on the board.
+2. Draw the NEXT element in the NEXT box, possibly downscaled.
+3. Add movement to the elements.
+4. Implement controls to move the elements left and right and make them descend faster when the down key is pressed.
+5. Introduce rotation logic for the elements.
+6. Implement the completion of lines and scoring increase logic.
+7. Establish a proper scoring system depending on whether it's a single, double, triple line, or Tetris, and considering the current level.
+8. Adjust the speed/difficulty depending on the level.
+9. Display a Game Over message once the elements pile up to the top of the board.
