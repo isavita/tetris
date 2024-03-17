@@ -2455,4 +2455,272 @@ I've added the skeleton of GameEngine.js and included it in the constructor of G
 
 **Assistant:**
 
+Great idea! Using a Test-Driven Development (TDD) approach will help ensure the correctness and reliability of the `GameEngine` class. Let's start by defining the interface and writing tests for each method.
 
+To get started, you'll need a testing framework. For simplicity, we can use Jest, a popular JavaScript testing framework. First, make sure you have Jest installed in your project. If you haven't installed it yet, you can do so by running the following command in your project directory:
+
+```
+npm install --save-dev jest
+```
+
+Now, let's create a new file called `GameEngine.test.js` to write our tests. We'll start with a test for initializing the `GameEngine`.
+
+```javascript
+// GameEngine.test.js
+import GameEngine from './GameEngine';
+
+describe('GameEngine', () => {
+  let gameEngine;
+
+  beforeEach(() => {
+    gameEngine = new GameEngine();
+  });
+
+  test('initializes the game state correctly', () => {
+    expect(gameEngine.board).toBeDefined();
+    expect(gameEngine.currentPiece).toBeDefined();
+    expect(gameEngine.nextPiece).toBeDefined();
+    expect(gameEngine.score).toBe(0);
+    expect(gameEngine.level).toBe(1);
+    expect(gameEngine.linesCleared).toBe(0);
+  });
+});
+```
+
+In this test, we define a test case for initializing the `GameEngine`. We create a new instance of `GameEngine` before each test case using the `beforeEach` hook. Then, we write assertions to check if the game state is initialized correctly.
+
+We expect the `GameEngine` to have the following properties:
+- `board`: Represents the game board.
+- `currentPiece`: Represents the current falling piece.
+- `nextPiece`: Represents the next piece to be played.
+- `score`: Represents the current score, initialized to 0.
+- `level`: Represents the current level, initialized to 1.
+- `linesCleared`: Represents the number of lines cleared, initialized to 0.
+
+Now, let's update the `GameEngine` class to make this test pass.
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  constructor() {
+    this.board = this.createEmptyBoard();
+    this.currentPiece = null;
+    this.nextPiece = null;
+    this.score = 0;
+    this.level = 1;
+    this.linesCleared = 0;
+  }
+
+  createEmptyBoard() {
+    // Create and return an empty game board
+    // You can define the dimensions and structure based on your requirements
+    return [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      // ...
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+  }
+
+  // Other methods will be implemented as we add more tests
+}
+```
+
+In the updated `GameEngine` class, we initialize the game state properties in the constructor. The `createEmptyBoard` method is a placeholder for creating an empty game board. You can define the dimensions and structure of the board based on your requirements.
+
+To run the test, add the following script to your `package.json` file:
+
+```json
+"scripts": {
+  "test": "jest"
+}
+```
+
+Then, run the test using the following command:
+
+```
+npm test
+```
+
+The test should pass, indicating that the `GameEngine` initializes the game state correctly.
+
+This is just the first step in the TDD approach. As we progress, we'll add more tests for each method of the `GameEngine` and implement them incrementally, ensuring that the tests pass at each step.
+
+Let me know if you have any questions or if you'd like to proceed with adding tests for other methods!
+
+**User:**
+
+Where exactly should I place the `GameEngine.test.js`? The path to `GameEngine.js` is `src/scenes/GameEngine.js`. My `package.json` is in the root directory, outside of `src`, and that's also where my `index.html` is located. Should I create a `__tests__` folder and place `GameEngine.test.js` there? What is the most standard approach?
+
+**Assistant:**
+
+In a typical Jest testing setup, it's common to place the test files alongside the source files they are testing. This makes it easier to locate and maintain the tests related to each module. However, you can also choose to create a separate `__tests__` directory if you prefer to keep the tests separate from the source files.
+
+Given that your `GameEngine.js` is located at `src/scenes/GameEngine.js`, you have a couple of options:
+
+1. Place the test file alongside the source file:
+   - Create a new file named `GameEngine.test.js` in the same directory as `GameEngine.js`.
+   - The file structure would look like this:
+     ```
+     src/
+       scenes/
+         GameEngine.js
+         GameEngine.test.js
+     ```
+
+2. Create a separate `__tests__` directory:
+   - Create a new directory named `__tests__` inside the `src` directory.
+   - Place the `GameEngine.test.js` file inside the `__tests__` directory.
+   - The file structure would look like this:
+     ```
+     src/
+       scenes/
+         GameEngine.js
+       __tests__/
+         GameEngine.test.js
+     ```
+
+Both approaches are valid and widely used. The choice between them often comes down to personal preference or the conventions followed by your project or team.
+
+Regardless of which approach you choose, make sure to update the import statement in your `GameEngine.test.js` file to correctly reference the `GameEngine` module based on the relative file path.
+
+For example, if you place the test file alongside the source file, the import statement would be:
+```javascript
+import GameEngine from './GameEngine';
+```
+
+If you place the test file in a separate `__tests__` directory, the import statement would be:
+```javascript
+import GameEngine from '../scenes/GameEngine';
+```
+
+Regarding the `package.json` and `index.html` files, it's common to have them in the root directory of your project, outside the `src` directory. The `package.json` file is used to manage project dependencies and configure various project settings, including the Jest testing framework.
+
+To run the tests using Jest, make sure you have the following script in your `package.json` file:
+```json
+"scripts": {
+  "test": "jest"
+}
+```
+
+Then, you can run the tests by executing the following command in the terminal from the root directory of your project:
+```
+npm test
+```
+
+Jest will automatically discover and run the test files based on its default configuration.
+
+I hope this clarifies the placement of the test file and the structure of your project. Let me know if you have any further questions!
+
+**User:**
+
+I decided to use the second approach with __tests__ folder inside src. 
+When I run the jest tests I am getting following error
+```
+// GameEngine.test.js
+import GameEngine from '../scenes/GameEngine.js';
+
+describe('GameEngine', () => {
+  let gameEngine;
+
+  beforeEach(() => {
+    gameEngine = new GameEngine();
+  });
+
+  test('initializes the game state correctly', () => {
+    expect(gameEngine.board).toBeDefined();
+    expect(gameEngine.currentPiece).toBeDefined();
+    expect(gameEngine.nextPiece).toBeDefined();
+    expect(gameEngine.score).toBe(0);
+    expect(gameEngine.level).toBe(1);
+    expect(gameEngine.linesCleared).toBe(0);
+  });
+});
+```
+I am getting following error
+```
+SyntaxError: Cannot use import statement outside a module
+
+      at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1505:14)
+```
+
+**Assistant:**
+
+The error you're encountering suggests that Jest is not configured to handle ES modules (ECMAScript modules) by default. To resolve this issue, you have a few options:
+
+1. Use CommonJS syntax for importing modules:
+   - Change the import statement in `GameEngine.test.js` to use the CommonJS syntax (`require`):
+     ```javascript
+     const GameEngine = require('../scenes/GameEngine');
+     ```
+   - Update the export statement in `GameEngine.js` to use the CommonJS syntax (`module.exports`):
+     ```javascript
+     module.exports = class GameEngine {
+       // ...
+     };
+     ```
+
+2. Configure Jest to use Babel for transpiling ES modules:
+   - Install the necessary dependencies:
+     ```
+     npm install --save-dev @babel/preset-env
+     ```
+   - Create a `.babelrc` file in the root directory of your project with the following content:
+     ```json
+     {
+       "presets": ["@babel/preset-env"]
+     }
+     ```
+   - Update the Jest configuration in your `package.json` file to use Babel:
+     ```json
+     "jest": {
+       "transform": {
+         "^.+\\.js$": "babel-jest"
+       }
+     }
+     ```
+
+3. Use a `.mjs` file extension for your test files:
+   - Rename `GameEngine.test.js` to `GameEngine.test.mjs`.
+   - Update the Jest configuration in your `package.json` file to recognize `.mjs` files:
+     ```json
+     "jest": {
+       "moduleFileExtensions": ["js", "mjs"]
+     }
+     ```
+
+Personally, I recommend going with option 2 (configuring Jest to use Babel) as it provides a more consistent and flexible setup for handling ES modules across your project.
+
+After applying one of the above solutions, run your tests again using the `npm test` command, and the error should be resolved.
+
+Let me know if you have any further questions or if you encounter any other issues!
+
+**User:**
+
+I decided to use the second approach and now the test are failing as expected. I am getting the following error:
+```
+ FAIL  src/__tests__/GameEngine.test.js
+  GameEngine
+    ✕ initializes the game state correctly (1 ms)
+
+  ● GameEngine › initializes the game state correctly
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      10 |
+      11 |   test('initializes the game state correctly', () => {
+    > 12 |     expect(gameEngine.board).toBeDefined();
+         |                              ^
+      13 |     expect(gameEngine.currentPiece).toBeDefined();
+      14 |     expect(gameEngine.nextPiece).toBeDefined();
+      15 |     expect(gameEngine.score).toBe(0);
+
+      at Object.toBeDefined (src/__tests__/GameEngine.test.js:12:30)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+```
+
+Let's fix the implementation of the `GameEngine` class to make the test pass.

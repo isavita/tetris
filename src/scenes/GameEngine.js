@@ -1,17 +1,17 @@
 // GameEngine.js
 export default class GameEngine {
   constructor() {
-    // Initialize game state, board, pieces, score, level, etc.
+    this.board = this.createEmptyBoard();
+    this.currentPiece = null;
+    this.nextPiece = null;
+    this.score = 0;
+    this.level = 1;
+    this.linesCleared = 0;
   }
 
-  // Methods to handle game logic and state updates
-  movePiece(direction) {
-    // Update the position of the current piece based on the direction
+  createEmptyBoard() {
+    const rows = 20;
+    const columns = 10;
+    return Array(rows).fill(null).map(() => Array(columns).fill(0));
   }
-
-  rotatePiece() {
-    // Rotate the current piece
-  }
-
-  // Other game logic methods...
 }
