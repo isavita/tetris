@@ -3442,3 +3442,148 @@ The `rotatePiece` method should now correctly handle both clockwise and counterc
 I apologize for the previous confusion and incorrect solutions. This implementation should resolve the issue with the failing test for counterclockwise rotation.
 
 Let me know if you have any further questions or if you'd like to proceed with testing and implementing other methods in the `GameEngine` class!
+
+**User:**
+
+Thank you, this fixes the problem. Now, add tests to ensure that elements moving left and right cannot go off the board. For example, if an element is at the end of the board on the left side and receives a left input, it will not move. Add tests for different shapes to verify that even if one part of the shape is at the end of the board, it cannot move out.
+
+**Assistant:**
+
+Certainly! Let's add tests to ensure that elements cannot move off the board when moving left or right. We'll test different shapes and scenarios where parts of the shape are at the end of the board.
+
+Here are the additional tests for the `movePiece` method:
+
+```javascript
+// GameEngine.test.js
+import GameEngine from '../scenes/GameEngine';
+
+describe('GameEngine', () => {
+  // ... (previous tests)
+
+  describe('movePiece', () => {
+    // ... (previous movePiece tests)
+
+    test('does not move the piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 8, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(8);
+    });
+
+    test('does not move the I-shaped piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the I-shaped piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 6, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(6);
+    });
+
+    test('does not move the T-shaped piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1, 1],
+          [0, 1, 0],
+        ],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the T-shaped piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1, 1],
+          [0, 1, 0],
+        ],
+        position: { x: 7, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(7);
+    });
+  });
+});
+```
+
+In these tests, we set up different scenarios where the current piece is at the edge of the board and attempt to move it off the board. We check that the piece's position remains unchanged when it cannot move further in the specified direction.
+
+To make these tests pass, you'll need to update the `movePiece` method in the `GameEngine` class to include boundary checks. Here's an example implementation:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  // ... (constructor and other methods)
+
+  movePiece(direction) {
+    const { x, y } = this.currentPiece.position;
+    const cols = this.currentPiece.shape[0].length;
+
+    switch (direction) {
+      case 'left':
+        if (x > 0) {
+          this.currentPiece.position.x = x - 1;
+        }
+        break;
+      case 'right':
+        if (x + cols < this.board[0].length) {
+          this.currentPiece.position.x = x + 1;
+        }
+        break;
+      case 'down':
+        this.currentPiece.position.y = y + 1;
+        break;
+      default:
+        break;
+    }
+  }
+}
+```
+
+In this updated `movePiece` method, we add checks to ensure that the piece does not move off the board:
+- When moving left, we check if the current x-position is greater than 0 before allowing the movement.
+- When moving right, we check if the current x-position plus the width of the piece is less than the width of the board before allowing the movement.
+
+Now, when you run the tests using the `npm test` command, all the tests should pass, including the new tests for boundary checks.
+
+These tests cover different shapes and scenarios to ensure that pieces cannot move off the board. Feel free to add more test cases for other shapes and edge cases as needed.
+
+Let me know if you have any further questions or if you'd like to proceed with testing and implementing other methods in the `GameEngine` class!

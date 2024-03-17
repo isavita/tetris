@@ -17,13 +17,18 @@ export default class GameEngine {
 
   movePiece(direction) {
     const { x, y } = this.currentPiece.position;
+    const cols = this.currentPiece.shape[0].length;
 
     switch (direction) {
       case 'left':
-        this.currentPiece.position.x = x - 1;
+        if (x > 0) {
+          this.currentPiece.position.x = x - 1;
+        }
         break;
       case 'right':
-        this.currentPiece.position.x = x + 1;
+        if (x + cols < this.board[0].length) {
+          this.currentPiece.position.x = x + 1;
+        }
         break;
       case 'down':
         this.currentPiece.position.y = y + 1;

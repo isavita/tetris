@@ -145,5 +145,84 @@ describe('GameEngine', () => {
         [0, 1],
       ]);
     });
+
+    test('does not move the piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 8, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(8);
+    });
+
+    test('does not move the I-shaped piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the I-shaped piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 6, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(6);
+    });
+
+
+    test('does not move the T-shaped piece off the board to the left', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1, 1],
+          [0, 1, 0],
+        ],
+        position: { x: 0, y: 0 },
+      };
+
+      gameEngine.movePiece('left');
+
+      expect(gameEngine.currentPiece.position.x).toBe(0);
+    });
+
+    test('does not move the T-shaped piece off the board to the right', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1, 1],
+          [0, 1, 0],
+        ],
+        position: { x: 7, y: 0 },
+      };
+
+      gameEngine.movePiece('right');
+
+      expect(gameEngine.currentPiece.position.x).toBe(7);
+    });
   });
 });
