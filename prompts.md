@@ -3587,3 +3587,9 @@ Now, when you run the tests using the `npm test` command, all the tests should p
 These tests cover different shapes and scenarios to ensure that pieces cannot move off the board. Feel free to add more test cases for other shapes and edge cases as needed.
 
 Let me know if you have any further questions or if you'd like to proceed with testing and implementing other methods in the `GameEngine` class!
+
+**User:**
+
+Thank you! This worked perfectly. Could you now add logic for the `movePiece` method to handle collision detection when moving down? I would like to ensure that the piece stops moving down when it collides with the bottom of the board.
+
+**Assistant:**

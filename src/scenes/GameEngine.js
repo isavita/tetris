@@ -18,6 +18,7 @@ export default class GameEngine {
   movePiece(direction) {
     const { x, y } = this.currentPiece.position;
     const cols = this.currentPiece.shape[0].length;
+    const rows = this.currentPiece.shape.length;
 
     switch (direction) {
       case 'left':
@@ -31,7 +32,9 @@ export default class GameEngine {
         }
         break;
       case 'down':
-        this.currentPiece.position.y = y + 1;
+        if (y + rows < this.board.length) {
+          this.currentPiece.position.y = y + 1;
+        }
         break;
       default:
         break;

@@ -224,5 +224,19 @@ describe('GameEngine', () => {
 
       expect(gameEngine.currentPiece.position.x).toBe(7);
     });
+
+    test('stops the piece from moving down when it collides with the bottom of the board', () => {
+      gameEngine.currentPiece = {
+        shape: [
+          [1, 1],
+          [1, 1],
+        ],
+        position: { x: 0, y: 18 },
+      };
+
+      gameEngine.movePiece('down');
+
+      expect(gameEngine.currentPiece.position.y).toBe(18);
+    });
   });
 });
