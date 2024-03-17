@@ -1,4 +1,6 @@
 // GameScene.js
+import GameEngine from "./GameEngine.js";
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
