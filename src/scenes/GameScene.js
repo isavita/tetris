@@ -9,15 +9,16 @@ export default class GameScene extends Phaser.Scene {
     this.topScore = 251160;
     this.currentScore = 16512;
     this.level = 0;
+    this.frames = 0;
+    this.blockSize = 15;
   }
 
   create() {
     const { width, height } = this.cameras.main;
     const boardWidth = 10;
     const boardHeight = 20;
-    const blockSize = 15;
-    const gameWidth = boardWidth * blockSize;
-    const gameHeight = boardHeight * blockSize;
+    const gameWidth = boardWidth * this.blockSize;
+    const gameHeight = boardHeight * this.blockSize;
     const offsetX = (width - gameWidth) / 2;
     const offsetY = 20;
     const gap = 20;
@@ -52,8 +53,8 @@ export default class GameScene extends Phaser.Scene {
       gameBoardY,
       gameWidth,
       gameHeight,
-      blockSize,
-      blockSize,
+      this.blockSize,
+      this.blockSize,
       0x0000ff,
       0,
       0xffffff,
@@ -142,6 +143,17 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update() {
+    this.frames++;
+    const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+  
+    if (this.frames >= framesPerGridCell) {
+      this.frames = 0;
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.movePieceDown();
+      }
+    }
+  
     this.drawBoard();
     this.drawCurrentPiece();
   }
@@ -154,35 +166,51 @@ export default class GameScene extends Phaser.Scene {
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (board[row][col]) {
-          const blockX = col * blockSize;
-          const blockY = row * blockSize;
-          this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xffffff);
+          const blockX = col * this.blockSize;
+          const blockY = row * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xffffff);
+        }
+      }
+    }
+  }
+  drawCurrentPiece() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const gameBoardX = this.gameBoardX;
+    const gameBoardY = this.gameBoardY;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xff0000).setOrigin(0);
         }
       }
     }
   }
 
-// GameScene.js
-drawCurrentPiece() {
-  const { currentPiece } = this.gameEngine;
-  const { shape, position } = currentPiece;
-  const rows = shape.length;
-  const cols = shape[0].length;
-  const blockSize = 15;
-  const gameBoardX = this.gameBoardX;
-  const gameBoardY = this.gameBoardY;
+  movePieceDown() {
+    const { currentPiece } = this.gameEngine;
+    currentPiece.position.y++;
+  }
 
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      if (shape[row][col]) {
-        const blockX = gameBoardX + (position.x + col) * blockSize;
-        const blockY = gameBoardY + (position.y + row) * blockSize;
-        this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xff0000).setOrigin(0);
+  clearPrevPiecePosition() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = this.gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = this.gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+        }
       }
     }
-  }
-}
-
-  drawPiece() {
   }
 }

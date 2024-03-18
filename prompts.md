@@ -5769,3 +5769,301 @@ This draws a piece on the screen but it is not on the board. It is drawn on the 
 
 **Assistant:**
 
+You're correct. The issue is that the piece is being drawn relative to the top-left corner of the screen instead of the game board. To fix this, you need to adjust the position of the piece to be relative to the game board's position.
+
+In the `GameScene` class, you have the `gameBoardX` and `gameBoardY` variables that represent the position of the game board. You can use these variables to calculate the correct position of the piece on the game board.
+
+Here's how you can modify the `drawCurrentPiece` method to draw the piece relative to the game board:
+
+```javascript
+// GameScene.js
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const blockSize = 15;
+  const gameBoardX = this.gameBoardX;
+  const gameBoardY = this.gameBoardY;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = gameBoardX + (position.x + col) * blockSize;
+        const blockY = gameBoardY + (position.y + row) * blockSize;
+        this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xff0000).setOrigin(0);
+      }
+    }
+  }
+}
+```
+
+In the updated `drawCurrentPiece` method:
+
+- We get the `gameBoardX` and `gameBoardY` values from the `GameScene` instance.
+- When calculating the `blockX` and `blockY` positions, we add the `gameBoardX` and `gameBoardY` values to offset the piece's position relative to the game board.
+- We set the origin of the rectangle to `(0, 0)` using `setOrigin(0)` to ensure that the rectangle is drawn from its top-left corner.
+
+Additionally, you need to store the `gameBoardX` and `gameBoardY` values as instance variables in the `GameScene` class so that you can access them in the `drawCurrentPiece` method:
+
+```javascript
+// GameScene.js
+create() {
+  // ... existing code ...
+
+  const gameBoardX = linesBoxX;
+  const gameBoardY = linesBoxY + linesBoxHeight + gap;
+  this.gameBoardX = gameBoardX;
+  this.gameBoardY = gameBoardY;
+
+  // ... existing code ...
+}
+```
+
+With these changes, the piece should now be drawn relative to the game board's position.
+
+Please update your code with these modifications and check if the piece is correctly positioned on the game board.
+
+Let me know if you have any further questions or if there are any other issues you encounter.
+
+**User:**
+
+Thank you, this worked. Let's continue with trying to move the piece downwars.
+The speed of the falling tetrominoes (also known as the gravity) depends on the level. On Level 0, the tetrominoes move down by one row every 16 frames. Considering that Tetris runs at 60 frames per second, this translates to a speed of approximately 3.75 rows per second.
+Add some logic to the update method of the GameScene to move the current piece down by one row every 16 frames. It might be a good idea to add a new method that depends on the level to calculate the speed of the falling tetrominoes. The method should return the number of frames that need to pass before the tetrominoes move down by one row.
+
+**Assistant:**
+
+To move the current piece downwards based on the level, you can add a new method in the `GameEngine` class to calculate the number of frames needed for each downward movement. Then, in the `update` method of the `GameScene`, you can keep track of the frames and move the piece down accordingly.
+
+First, let's add a method called `getFramesPerGridCell` in the `GameEngine` class to calculate the number of frames based on the level:
+
+```javascript
+// GameEngine.js
+getFramesPerGridCell() {
+  const framesPerGridCell = Math.floor(16 / (1 + (this.level * 0.1)));
+  return framesPerGridCell;
+}
+```
+
+In this method, we calculate the number of frames needed for each downward movement based on the level. We start with 16 frames at Level 0 and decrease the number of frames as the level increases. The formula `16 / (1 + (this.level * 0.1))` determines the speed increase with each level.
+
+Next, update the `GameScene` class to track the frames and move the piece down:
+
+```javascript
+// GameScene.js
+constructor() {
+  super('GameScene');
+  this.gameEngine = new GameEngine();
+  this.linesCount = 0;
+  this.topScore = 251160;
+  this.currentScore = 16512;
+  this.level = 0;
+  this.frames = 0;
+}
+
+update() {
+  this.frames++;
+  const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    this.movePieceDown();
+  }
+
+  this.drawBoard();
+  this.drawCurrentPiece();
+}
+
+movePieceDown() {
+  const { currentPiece } = this.gameEngine;
+  currentPiece.position.y++;
+}
+```
+
+In the updated `GameScene` class:
+
+- We introduce a new instance variable called `frames` to keep track of the frames passed.
+- In the `update` method, we increment the `frames` count on each frame.
+- We call the `getFramesPerGridCell` method from the `GameEngine` instance to get the number of frames needed for each downward movement.
+- If the `frames` count reaches or exceeds the `framesPerGridCell` value, we reset the `frames` count to zero and call the `movePieceDown` method to move the current piece down by one row.
+- The `movePieceDown` method updates the `y` position of the current piece by incrementing it by one.
+
+With these changes, the current piece should move downwards based on the level. At Level 0, it will move down by one row every 16 frames, which translates to a speed of approximately 3.75 rows per second at 60 frames per second.
+
+Please update your code with these modifications and check if the piece moves down as expected.
+
+Let me know if you have any further questions or if you need assistance with any other part of the game.
+
+**User:**
+
+Thank you, this worked for the most part. However, the piece is moving down but the previous position is not being cleared. Also the piece does not stop when it reaches the bottom of the board. Could you fix these two issues?
+
+**Assistant:**
+
+To clear the previous position of the piece and stop it when it reaches the bottom of the board, you need to make a few adjustments to the `GameScene` and `GameEngine` classes.
+
+First, let's update the `GameEngine` class to add a method to check if the piece can move down:
+
+```javascript
+// GameEngine.js
+canMovePieceDown() {
+  const { shape, position } = this.currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const newRow = position.y + row + 1;
+        if (newRow >= this.board.length || this.board[newRow][position.x + col]) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+```
+
+In this method, we check if the piece can move down by iterating over its shape and checking if any part of the piece would exceed the board's height or collide with an existing block on the board.
+
+Next, update the `GameScene` class to clear the previous position of the piece and stop it when it reaches the bottom:
+
+```javascript
+// GameScene.js
+update() {
+  this.frames++;
+  const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    if (this.gameEngine.canMovePieceDown()) {
+      this.movePieceDown();
+    } else {
+      this.placePiece();
+    }
+  }
+
+  this.drawBoard();
+  this.drawCurrentPiece();
+}
+
+movePieceDown() {
+  const { currentPiece } = this.gameEngine;
+  currentPiece.position.y++;
+}
+
+placePiece() {
+  const { board, currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        board[position.y + row][position.x + col] = shape[row][col];
+      }
+    }
+  }
+
+  this.gameEngine.currentPiece = this.gameEngine.createNewPiece();
+}
+```
+
+In the updated `GameScene` class:
+
+- In the `update` method, we check if the piece can move down using the `canMovePieceDown` method from the `GameEngine` instance.
+  - If the piece can move down, we call the `movePieceDown` method to move it down by one row.
+  - If the piece cannot move down, we call the `placePiece` method to place the piece on the board and create a new piece.
+
+- The `placePiece` method is responsible for placing the current piece on the board by updating the corresponding cells in the `board` array.
+  - After placing the piece, we create a new piece using the `createNewPiece` method from the `GameEngine` instance and assign it to `this.gameEngine.currentPiece`.
+
+With these changes, the previous position of the piece will be cleared as it moves down, and the piece will stop when it reaches the bottom of the board or collides with another piece. When the piece stops, it will be placed on the board, and a new piece will be created.
+
+Please update your code with these modifications and check if the piece behaves as expected.
+
+Let me know if you have any further questions or if you need assistance with any other part of the game.
+
+**User:**
+
+Thank you. I used part of your suggestions. I added the logic for `canMovePieceDown` and the check for the bottom of the board in the `update` method. However, I did not use the `placePiece` method. Before to go and add a new piece, we need to clean the previous position of the piece that was moved down. For that I want to add to this code
+```javascript
+if (this.gameEngine.canMovePieceDown()) {
+    this.movePieceDown();
+}
+```
+
+a new method called `clearPrevPiecePosition` that will be responsible for clearing the previous position of the piece. Could you help me with that?
+
+I will want the final code to look like this
+```javascript
+if (this.gameEngine.canMovePieceDown()) {
+    this.clearPrevPiecePosition();
+    this.movePieceDown();
+}
+```
+
+**Assistant:**
+
+To clear the previous position of the piece before moving it down, you can add a new method called `clearPrevPiecePosition` to the `GameScene` class. This method will be responsible for clearing the cells on the game board that were previously occupied by the piece.
+
+Here's how you can implement the `clearPrevPiecePosition` method:
+
+```javascript
+// GameScene.js
+clearPrevPiecePosition() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const blockSize = 15;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = this.gameBoardX + (position.x + col) * blockSize;
+        const blockY = this.gameBoardY + (position.y + row) * blockSize;
+        this.add.rectangle(blockX, blockY, blockSize, blockSize, 0x000000).setOrigin(0);
+      }
+    }
+  }
+}
+```
+
+In the `clearPrevPiecePosition` method:
+
+- We get the `currentPiece` from the `GameEngine` instance and extract its `shape` and `position`.
+- We iterate over the shape of the piece and find the cells that are occupied by the piece.
+- For each occupied cell, we calculate the `blockX` and `blockY` positions based on the `gameBoardX`, `gameBoardY`, and the piece's position.
+- We create a black rectangle (`0x000000`) at the calculated position to clear the previous position of the piece.
+
+Now, you can update the `update` method to call the `clearPrevPiecePosition` method before moving the piece down:
+
+```javascript
+// GameScene.js
+update() {
+  this.frames++;
+  const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    if (this.gameEngine.canMovePieceDown()) {
+      this.clearPrevPiecePosition();
+      this.movePieceDown();
+    }
+  }
+
+  this.drawBoard();
+  this.drawCurrentPiece();
+}
+```
+
+With these changes, the previous position of the piece will be cleared before moving it down. The `clearPrevPiecePosition` method will draw black rectangles over the cells that were previously occupied by the piece, effectively clearing them.
+
+Please update your code with the `clearPrevPiecePosition` method and the updated `update` method, and check if the piece's previous position is cleared correctly as it moves down.
+
+Let me know if you have any further questions or if you need assistance with any other part of the game.

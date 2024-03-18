@@ -158,4 +158,28 @@ export default class GameEngine {
   
     return false;
   }
+
+  getFramesPerGridCell() {
+    const framesPerGridCell = Math.floor(16 / (1 + (this.level * 0.1)));
+    return framesPerGridCell;
+  }
+
+  canMovePieceDown() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const newRow = position.y + row + 1;
+          if (newRow >= this.board.length || this.board[newRow][position.x + col]) {
+            return false;
+          }
+        }
+      }
+    }
+  
+    return true;
+  }
 }
