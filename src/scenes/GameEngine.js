@@ -182,4 +182,50 @@ export default class GameEngine {
   
     return true;
   }
+
+  canMovePieceLeft() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const newCol = position.x + col - 1;
+          if (newCol < 0 || this.board[position.y + row][newCol]) {
+            return false;
+          }
+        }
+      }
+    }
+  
+    return true;
+  }
+
+  canMovePieceRight() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const newCol = position.x + col + 1;
+          if (newCol >= this.board[0].length || this.board[position.y + row][newCol]) {
+            return false;
+          }
+        }
+      }
+    }
+  
+    return true;
+  }
+
+  movePieceLeft() {
+    this.currentPiece.position.x--;
+  }
+  
+  movePieceRight() {
+    this.currentPiece.position.x++;
+  }
 }

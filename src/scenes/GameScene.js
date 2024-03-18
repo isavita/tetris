@@ -11,9 +11,15 @@ export default class GameScene extends Phaser.Scene {
     this.level = 0;
     this.frames = 0;
     this.blockSize = 15;
+    this.cursors = null;
+    this.dasDelay = 16; // DAS delay in frames
+    this.dasInterval = 6; // DAS interval in frames
+    this.dasTimer = 0; // DAS timer
+    this.dasDirection = null; // DAS direction ('left' or 'right')
   }
 
   create() {
+    this.cursors = this.input.keyboard.createCursorKeys();
     const { width, height } = this.cameras.main;
     const boardWidth = 10;
     const boardHeight = 20;
@@ -145,7 +151,24 @@ export default class GameScene extends Phaser.Scene {
   update() {
     this.frames++;
     const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
-  
+
+    // Handle left and right movement
+    if (this.cursors.left.isDown) {
+      if (this.dasDirection !== 'left') {
+        this.dasTimer = 0;
+        this.dasDirection = 'left';
+      }
+      this.handleDAS();
+    } else if (this.cursors.right.isDown) {
+      if (this.dasDirection !== 'right') {
+        this.dasTimer = 0;
+        this.dasDirection = 'right';
+      }
+      this.handleDAS();
+    } else {
+      this.dasDirection = null;
+    }
+
     if (this.frames >= framesPerGridCell) {
       this.frames = 0;
       if (this.gameEngine.canMovePieceDown()) {
@@ -153,7 +176,7 @@ export default class GameScene extends Phaser.Scene {
         this.movePieceDown();
       }
     }
-  
+
     this.drawBoard();
     this.drawCurrentPiece();
   }
@@ -211,6 +234,30 @@ export default class GameScene extends Phaser.Scene {
           this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
         }
       }
+    }
+  }
+
+  handleDAS() {
+    if (this.dasTimer === 0) {
+      this.movePieceHorizontally();
+    }
+  
+    this.dasTimer++;
+  
+    if (this.dasTimer >= this.dasDelay) {
+      if ((this.dasTimer - this.dasDelay) % this.dasInterval === 0) {
+        this.movePieceHorizontally();
+      }
+    }
+  }
+
+  movePieceHorizontally() {
+    if (this.dasDirection === 'left' && this.gameEngine.canMovePieceLeft()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceLeft();
+    } else if (this.dasDirection === 'right' && this.gameEngine.canMovePieceRight()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceRight();
     }
   }
 }

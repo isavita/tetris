@@ -6067,3 +6067,267 @@ With these changes, the previous position of the piece will be cleared before mo
 Please update your code with the `clearPrevPiecePosition` method and the updated `update` method, and check if the piece's previous position is cleared correctly as it moves down.
 
 Let me know if you have any further questions or if you need assistance with any other part of the game.
+
+**User:**
+
+Thank you. The previous position of the piece is being cleared. However, let's move to allowing the player to move the piece left and right. I want to add the logic to the `update` method to handle the left and right arrow keys. When the left arrow key is pressed, the current piece should move one cell to the left if possible. Similarly, when the right arrow key is pressed, the current piece should move one cell to the right if possible. Could you help me with that?
+
+**Assistant:**
+
+Certainly! To allow the player to move the current piece left and right using the arrow keys, you can utilize the Phaser 3 input system. Here's how you can modify the `update` method to handle the left and right arrow keys:
+
+```javascript
+// GameScene.js
+update() {
+  this.frames++;
+  const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+
+  // Handle left arrow key
+  if (this.input.keyboard.checkDown(Phaser.Input.Keyboard.KeyCodes.LEFT)) {
+    if (this.gameEngine.canMovePieceLeft()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceLeft();
+    }
+  }
+
+  // Handle right arrow key
+  if (this.input.keyboard.checkDown(Phaser.Input.Keyboard.KeyCodes.RIGHT)) {
+    if (this.gameEngine.canMovePieceRight()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceRight();
+    }
+  }
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    if (this.gameEngine.canMovePieceDown()) {
+      this.clearPrevPiecePosition();
+      this.movePieceDown();
+    }
+  }
+
+  this.drawBoard();
+  this.drawCurrentPiece();
+}
+```
+
+In the updated `update` method:
+
+- We use `this.input.keyboard.checkDown` to check if the left arrow key (`Phaser.Input.Keyboard.KeyCodes.LEFT`) or the right arrow key (`Phaser.Input.Keyboard.KeyCodes.RIGHT`) is pressed.
+- If the left arrow key is pressed, we call the `canMovePieceLeft` method from the `GameEngine` instance to check if the piece can move to the left. If it can, we clear the previous position of the piece using `clearPrevPiecePosition` and then call the `movePieceLeft` method from the `GameEngine` instance to move the piece to the left.
+- Similarly, if the right arrow key is pressed, we call the `canMovePieceRight` method to check if the piece can move to the right. If it can, we clear the previous position and call the `movePieceRight` method to move the piece to the right.
+
+Now, you need to add the `canMovePieceLeft`, `canMovePieceRight`, `movePieceLeft`, and `movePieceRight` methods to the `GameEngine` class:
+
+```javascript
+// GameEngine.js
+canMovePieceLeft() {
+  const { shape, position } = this.currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const newCol = position.x + col - 1;
+        if (newCol < 0 || this.board[position.y + row][newCol]) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+canMovePieceRight() {
+  const { shape, position } = this.currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const newCol = position.x + col + 1;
+        if (newCol >= this.board[0].length || this.board[position.y + row][newCol]) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+movePieceLeft() {
+  this.currentPiece.position.x--;
+}
+
+movePieceRight() {
+  this.currentPiece.position.x++;
+}
+```
+
+In the `GameEngine` class:
+
+- The `canMovePieceLeft` method checks if the piece can move to the left by iterating over its shape and checking if any part of the piece would exceed the left boundary of the board or collide with an existing block on the board.
+- The `canMovePieceRight` method checks if the piece can move to the right by iterating over its shape and checking if any part of the piece would exceed the right boundary of the board or collide with an existing block on the board.
+- The `movePieceLeft` method moves the piece to the left by decrementing the `x` position of the current piece.
+- The `movePieceRight` method moves the piece to the right by incrementing the `x` position of the current piece.
+
+With these changes, the player should be able to move the current piece left and right using the arrow keys. The piece will only move if it can do so without colliding with the boundaries or other blocks on the board.
+
+Please update your code with the modified `update` method in the `GameScene` class and add the new methods to the `GameEngine` class. Test the game to ensure that the piece can be moved left and right using the arrow keys.
+
+Let me know if you have any further questions or if you need assistance with any other part of the game.
+
+**User:**
+
+I used almost entirely your suggestions. The only part that seems to be wrong is these two
+checks
+```javascript
+// Handle left arrow key
+if (this.input.keyboard.checkDown(Phaser.Input.Keyboard.KeyCodes.LEFT)) {
+  ...
+}
+
+// Handle right arrow key
+if (this.input.keyboard.checkDown(Phaser.Input.Keyboard.KeyCodes.RIGHT)) {
+  ...
+}
+```
+instead I added to constructor
+```javascript
+this.cursors = null;
+```
+and then in the `create` method
+```javascript
+this.cursors = this.input.keyboard.createCursorKeys();
+```
+and then in the `update` method
+```javascript
+if (this.cursors.left.isDown) {
+...
+}
+
+if (this.cursors.right.isDown) {
+...
+}
+```
+
+However, the pieces are moving to fast and not one position on the left or right with the speed they are failing down. To determine the DAS (Delayed Auto Shift) speed, it's important to consider the DAS delay, initial DAS value, and DAS increment per frame. Please add this for me.
+
+**Assistant:**
+
+To control the movement speed of the piece when the left or right arrow key is held down, you can implement the Delayed Auto Shift (DAS) mechanic. DAS allows for smoother and more controlled horizontal movement of the piece.
+
+Here's how you can modify the `GameScene` class to incorporate DAS:
+
+```javascript
+// GameScene.js
+constructor() {
+  super('GameScene');
+  // ... (existing code)
+  this.cursors = null;
+  this.dasDelay = 16; // DAS delay in frames
+  this.dasInterval = 6; // DAS interval in frames
+  this.dasTimer = 0; // DAS timer
+  this.dasDirection = null; // DAS direction ('left' or 'right')
+}
+
+create() {
+  // ... (existing code)
+  this.cursors = this.input.keyboard.createCursorKeys();
+}
+
+update() {
+  this.frames++;
+  const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+
+  // Handle left arrow key
+  if (this.cursors.left.isDown) {
+    if (this.dasDirection !== 'left') {
+      this.dasTimer = 0;
+      this.dasDirection = 'left';
+    }
+    this.handleDAS();
+  } else if (this.cursors.right.isDown) {
+    if (this.dasDirection !== 'right') {
+      this.dasTimer = 0;
+      this.dasDirection = 'right';
+    }
+    this.handleDAS();
+  } else {
+    this.dasDirection = null;
+  }
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    if (this.gameEngine.canMovePieceDown()) {
+      this.clearPrevPiecePosition();
+      this.movePieceDown();
+    }
+  }
+
+  this.drawBoard();
+  this.drawCurrentPiece();
+}
+
+handleDAS() {
+  if (this.dasTimer === 0) {
+    this.movePieceHorizontally();
+  }
+
+  this.dasTimer++;
+
+  if (this.dasTimer >= this.dasDelay) {
+    if ((this.dasTimer - this.dasDelay) % this.dasInterval === 0) {
+      this.movePieceHorizontally();
+    }
+  }
+}
+
+movePieceHorizontally() {
+  if (this.dasDirection === 'left' && this.gameEngine.canMovePieceLeft()) {
+    this.clearPrevPiecePosition();
+    this.gameEngine.movePieceLeft();
+  } else if (this.dasDirection === 'right' && this.gameEngine.canMovePieceRight()) {
+    this.clearPrevPiecePosition();
+    this.gameEngine.movePieceRight();
+  }
+}
+```
+
+Let's go through the changes:
+
+1. In the constructor, we initialize the DAS-related variables:
+   - `dasDelay`: The number of frames to wait before starting auto-repeat movement (DAS delay).
+   - `dasInterval`: The number of frames between each auto-repeat movement (DAS interval).
+   - `dasTimer`: A timer to keep track of the number of frames since the key was pressed.
+   - `dasDirection`: The current DAS direction ('left' or 'right').
+
+2. In the `update` method:
+   - We check if the left or right arrow key is being held down.
+   - If the DAS direction changes, we reset the `dasTimer` and update the `dasDirection`.
+   - We call the `handleDAS` method to handle the DAS mechanics.
+
+3. The `handleDAS` method:
+   - If the `dasTimer` is 0 (initial press), we immediately move the piece horizontally.
+   - We increment the `dasTimer` on each frame.
+   - If the `dasTimer` exceeds the `dasDelay`, we move the piece horizontally every `dasInterval` frames.
+
+4. The `movePieceHorizontally` method:
+   - Based on the `dasDirection`, we check if the piece can move left or right using the existing `canMovePieceLeft` and `canMovePieceRight` methods.
+   - If the piece can move, we clear the previous position and move the piece using the existing `movePieceLeft` and `movePieceRight` methods.
+
+With these modifications, the piece will move one position to the left or right when the corresponding arrow key is initially pressed. If the key is held down, the piece will continue to move horizontally based on the DAS delay and interval.
+
+You can adjust the `dasDelay` and `dasInterval` values to fine-tune the DAS mechanics according to your preference.
+
+Please update your code with these changes and test the game to ensure that the piece moves smoothly and controlled when the left or right arrow key is held down.
+
+Let me know if you have any further questions or if you need assistance with any other part of the game.
+
+**User:**
+
+Thank you this worked perfectly. Now I will like to make a new random piece appear when the current piece is placed on the board and cannot move down anymore. I will also like to add a method to the `GameEngine` class to check if the game is over. The game is over when a new piece cannot be placed on the board at the start of the game. Could you help me with that?
