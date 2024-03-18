@@ -5372,3 +5372,400 @@ In this updated version, we simply check for collisions using the `checkCollisio
 Please update the `rotatePiece` method in your code and run the test again. The "does not rotate the I-shape if it collides with the board boundaries" test should now pass.
 
 Let me know if you have any further questions or if there are still any issues with the test.
+
+**User:**
+
+Thank you but this did not work. I still have the same failing test. However, I decide to move own and try to integrate the GameEngine.js with the GameScene.js and see if the game is working as expected. Could you help me with that? Think step by step how we can integrate the engine with the scene and start drawing the pieces on the board. After that, we can try to move the pieces and rotate them.
+
+**Assistant:**
+
+Certainly! Let's integrate the `GameEngine` with the `GameScene` and start drawing the pieces on the board. We'll follow a step-by-step approach to ensure a smooth integration.
+
+Step 1: Import the `GameEngine` into the `GameScene`:
+
+First, make sure to import the `GameEngine` class at the top of your `GameScene.js` file:
+
+```javascript
+import GameEngine from './GameEngine.js';
+```
+
+Step 2: Create an instance of the `GameEngine` in the `GameScene`:
+
+In the `create` method of the `GameScene`, create an instance of the `GameEngine`:
+
+```javascript
+create() {
+  // ... (existing code)
+
+  this.gameEngine = new GameEngine();
+
+  // ... (existing code)
+}
+```
+
+Step 3: Create a method to draw the game board:
+
+Add a new method called `drawBoard` to the `GameScene` class. This method will be responsible for drawing the game board based on the current state of the `GameEngine`:
+
+```javascript
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (board[row][col]) {
+        const blockX = col * blockSize;
+        const blockY = row * blockSize;
+        this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xffffff);
+      }
+    }
+  }
+}
+```
+
+Step 4: Create a method to draw the current piece:
+
+Add a new method called `drawCurrentPiece` to the `GameScene` class. This method will be responsible for drawing the current falling piece based on its shape and position:
+
+```javascript
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = (position.x + col) * blockSize;
+        const blockY = (position.y + row) * blockSize;
+        this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xff0000);
+      }
+    }
+  }
+}
+```
+
+Step 5: Call the drawing methods in the `create` method:
+
+In the `create` method of the `GameScene`, call the `drawBoard` and `drawCurrentPiece` methods to initially draw the game board and the current piece:
+
+```javascript
+create() {
+  // ... (existing code)
+
+  this.drawBoard();
+  this.drawCurrentPiece();
+
+  // ... (existing code)
+}
+```
+
+Step 6: Update the game board and current piece in the `update` method:
+
+In the `update` method of the `GameScene`, you can update the game board and the current piece based on the game logic. For now, let's just redraw the board and the current piece in each frame:
+
+```javascript
+update() {
+  this.drawBoard();
+  this.drawCurrentPiece();
+}
+```
+
+With these steps, you should now see the game board and the current falling piece being drawn on the screen when you run the game.
+
+To move and rotate the pieces, you'll need to implement the corresponding logic in the `GameEngine` and update the `GameScene` accordingly. Here's a high-level overview of the steps involved:
+
+1. Add methods in the `GameEngine` to handle piece movement and rotation.
+2. Update the `GameScene` to listen for user input events (e.g., arrow keys) and call the corresponding methods in the `GameEngine`.
+3. In the `update` method of the `GameScene`, update the game state based on the user input and redraw the board and the current piece.
+
+Let me know if you have any questions or if you need further assistance with integrating the game logic and handling user input.
+
+**User:**
+
+I am getting the following error when I try to run the game
+```
+Uncaught TypeError: Cannot destructure property 'shape' of 'currentPiece' as it is null.
+    at GameScene.drawCurrentPiece (GameScene.js:165:13)
+    at GameScene.create (GameScene.js:139:10)
+    at initialize.create (phaser.min.js:1:954364)
+    at initialize.bootScene (phaser.min.js:1:953634)
+    at initialize.start (phaser.min.js:1:957497)
+    at initialize.processQueue (phaser.min.js:1:952320)
+    at initialize.update (phaser.min.js:1:953849)
+    at initialize.step (phaser.min.js:1:76119)
+    at initialize.step (phaser.min.js:1:80333)
+    at e (phaser.min.js:1:141058)
+```
+
+Here is the code that I have in the `GameScene.js` file
+```javascript
+// GameScene.js
+import GameEngine from "./GameEngine.js";
+
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+    this.gameEngine = new GameEngine();
+    this.linesCount = 0;
+    this.topScore = 251160;
+    this.currentScore = 16512;
+    this.level = 0;
+  }
+
+  create() {
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const blockSize = 15;
+    const gameWidth = boardWidth * blockSize;
+    const gameHeight = boardHeight * blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 20;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 160;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX;
+    const linesBoxY = offsetY;
+    this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const linesTextColor = '#ffffff';
+    const linesTextSize = '18px';
+    const paddedLinesCount = String(this.linesCount).padStart(3, '0');
+    const linesText = ` LINES - ${paddedLinesCount}`;
+    
+    const lines = this.add.text(linesBoxX + 10, linesBoxY + 7, linesText, {
+        fontFamily: 'Courier New',
+        fontSize: linesTextSize,
+        fill: linesTextColor,
+    }).setOrigin(0);
+
+    // Create the game board
+    const gameBoardX = linesBoxX;
+    const gameBoardY = linesBoxY + linesBoxHeight + gap;
+    const gameBoard = this.add.grid(
+      gameBoardX,
+      gameBoardY,
+      gameWidth,
+      gameHeight,
+      blockSize,
+      blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    ).setOrigin(0);
+
+    // Create the top score and current score box
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = gameBoardX + gameWidth + gap;
+    const scoreBoxY = gameBoardY;
+    this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const scoreTextColor = '#ffffff';
+    const scoreTextSize = '14px';
+    const topScoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'TOP', {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    
+
+    const paddedTopScore = String(this.topScore).padStart(7, '0');
+    const topScoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + 10, paddedTopScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+
+    const scoreLabel = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + 20, 'SCORE', {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    console.log(scoreLabel);
+    const paddedCurrentScore = String(this.currentScore).padStart(7, '0');
+    const scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + scoreLabel.height + 20, paddedCurrentScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+
+    // Create the next box
+    const nextBoxWidth = scoreBoxWidth;
+    const nextBoxHeight = 80;
+    const nextBoxX = scoreBoxX;
+    const nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    this.add.rectangle(nextBoxX, nextBoxY, nextBoxWidth, nextBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const nextTextColor = '#ffffff';
+    const nextTextSize = '14px';
+    const nextLabel = this.add.text(nextBoxX + nextBoxWidth / 2, nextBoxY + 10, 'NEXT', {
+      fontFamily: 'Courier New',
+      fontSize: nextTextSize,
+      fill: nextTextColor,
+    }).setOrigin(0.5);
+    const nextPreview = this.add.rectangle(
+      nextBoxX + nextBoxWidth / 2,
+      nextBoxY + nextBoxHeight / 2 + 5,
+      nextBoxWidth - 30,
+      nextBoxHeight - 30,
+      0xfff000,
+    ).setOrigin(0.5);
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 50;
+    const levelBoxX = scoreBoxX;
+    const levelBoxY = nextBoxY + nextBoxHeight + gap;
+    this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const levelTextColor = '#ffffff';
+    const levelTextSize = '14px';
+    const levelLabel = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'Courier New',
+      fontSize: levelTextSize,
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+    const levelStr = String(this.level);
+    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, levelStr, {
+      fontFamily: 'Courier New',
+      fontSize: '18px',
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+
+    // Draw the game board
+    this.drawBoard();
+    this.drawCurrentPiece();
+  }
+
+  update() {
+    this.drawBoard();
+    this.drawCurrentPiece();
+  }
+
+  drawBoard() {
+    const { board } = this.gameEngine;
+    const rows = board.length;
+    const cols = board[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (board[row][col]) {
+          const blockX = col * blockSize;
+          const blockY = row * blockSize;
+          this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xffffff);
+        }
+      }
+    }
+  }
+
+  drawCurrentPiece() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = (position.x + col) * blockSize;
+          const blockY = (position.y + row) * blockSize;
+          this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xff0000);
+        }
+      }
+    }
+  }
+
+  drawPiece() {
+  }
+}
+```
+Please try to fix the issue.
+
+**Assistant:**
+
+The error occurs because the `currentPiece` property in the `GameEngine` is initially set to `null`, but the `drawCurrentPiece` method in the `GameScene` assumes that `currentPiece` has a `shape` and `position` property.
+
+To fix this issue, you need to ensure that a current piece is created and assigned to the `currentPiece` property in the `GameEngine` before calling the `drawCurrentPiece` method.
+
+Here's how you can modify the `GameEngine` class to create a new piece when the game starts:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  constructor() {
+    this.board = this.createEmptyBoard();
+    this.currentPiece = this.createNewPiece();
+    this.nextPiece = null;
+    this.score = 0;
+    this.level = 1;
+    this.linesCleared = 0;
+  }
+
+  createEmptyBoard() {
+    const rows = 20;
+    const columns = 10;
+    return Array(rows).fill(null).map(() => Array(columns).fill(0));
+  }
+
+  createNewPiece() {
+    // Define the shape and initial position of the new piece
+    const shape = [
+      [1, 1],
+      [1, 1],
+    ];
+    const position = { x: 4, y: 0 };
+
+    return { shape, position };
+  }
+
+  // ... other methods ...
+}
+```
+
+In the updated `GameEngine` class:
+
+- The `currentPiece` property is initialized with a new piece created by the `createNewPiece` method in the constructor.
+- The `createNewPiece` method defines the initial shape and position of the new piece. You can modify this method to generate different shapes and positions for new pieces.
+
+Now, when the `GameScene` calls the `drawCurrentPiece` method, the `currentPiece` property will have a valid piece object with a `shape` and `position` property.
+
+Additionally, you need to update the `drawCurrentPiece` method in the `GameScene` to use the correct `blockSize` variable:
+
+```javascript
+// GameScene.js
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const blockSize = 15; // Use the correct block size
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = (position.x + col) * blockSize;
+        const blockY = (position.y + row) * blockSize;
+        this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xff0000);
+      }
+    }
+  }
+}
+```
+
+With these changes, the error should be resolved, and you should see the current piece being drawn on the game board when you run the game.
+
+If you encounter any further issues or have additional questions, please let me know!
+
+**User:**
+
+This draws a piece on the screen but it is not on the board. It is drawn on the top left corner of the screen. I think I need to adjust the position of the piece. Could you help me with that? The piece should be relative to the game board. Keep in mind that the Phaser 3 draws many things using their center point as the reference. Try to think about how we can adjust the position of the piece to be relative to the game board and then I will check the solution.
+
+**Assistant:**
+

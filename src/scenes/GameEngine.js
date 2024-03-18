@@ -2,7 +2,7 @@
 export default class GameEngine {
   constructor() {
     this.board = this.createEmptyBoard();
-    this.currentPiece = null;
+    this.currentPiece = this.createNewPiece();
     this.nextPiece = null;
     this.score = 0;
     this.level = 1;
@@ -13,6 +13,17 @@ export default class GameEngine {
     const rows = 20;
     const columns = 10;
     return Array(rows).fill(null).map(() => Array(columns).fill(0));
+  }
+
+  createNewPiece() {
+    // Define the shape and initial position of the new piece
+    const shape = [
+      [1, 1],
+      [1, 1],
+    ];
+    const position = { x: 4, y: 0 };
+
+    return { shape, position };
   }
 
   movePiece(direction) {

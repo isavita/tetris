@@ -45,6 +45,8 @@ export default class GameScene extends Phaser.Scene {
     // Create the game board
     const gameBoardX = linesBoxX;
     const gameBoardY = linesBoxY + linesBoxHeight + gap;
+    this.gameBoardX = gameBoardX;
+    this.gameBoardY = gameBoardY;
     const gameBoard = this.add.grid(
       gameBoardX,
       gameBoardY,
@@ -133,13 +135,53 @@ export default class GameScene extends Phaser.Scene {
       fontSize: '18px',
       fill: levelTextColor,
     }).setOrigin(0.5);
+
+    // Draw the game board
+    this.drawBoard();
+    this.drawCurrentPiece();
   }
 
   update() {
+    this.drawBoard();
+    this.drawCurrentPiece();
   }
 
   drawBoard() {
+    const { board } = this.gameEngine;
+    const rows = board.length;
+    const cols = board[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (board[row][col]) {
+          const blockX = col * blockSize;
+          const blockY = row * blockSize;
+          this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xffffff);
+        }
+      }
+    }
   }
+
+// GameScene.js
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const blockSize = 15;
+  const gameBoardX = this.gameBoardX;
+  const gameBoardY = this.gameBoardY;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = gameBoardX + (position.x + col) * blockSize;
+        const blockY = gameBoardY + (position.y + row) * blockSize;
+        this.add.rectangle(blockX, blockY, blockSize, blockSize, 0xff0000).setOrigin(0);
+      }
+    }
+  }
+}
 
   drawPiece() {
   }

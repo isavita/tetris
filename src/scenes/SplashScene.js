@@ -15,7 +15,7 @@ export default class SplashScene extends Phaser.Scene {
     const scaleY = this.cameras.main.height / backgroundImage.height;
     backgroundImage.setScale(scaleX, scaleY);
 
-    this.time.delayedCall(3000, () => {
+    this.time.delayedCall(3, () => {
       this.scene.start('MenuScene');
     });
   }
