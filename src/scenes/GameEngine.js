@@ -263,8 +263,6 @@ export default class GameEngine {
   }
 
   createNewPiece() {
-    console.log(this.shapes);
-    console.log(this.shapes.length);
     const randomIndex = Math.floor(Math.random() * this.shapes.length);
     const shape = this.shapes[randomIndex];
     const position = { x: Math.floor(this.board[0].length / 2) - Math.floor(shape[0].length / 2), y: 0 };

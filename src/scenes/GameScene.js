@@ -94,7 +94,6 @@ export default class GameScene extends Phaser.Scene {
       fontSize: scoreTextSize,
       fill: scoreTextColor,
     }).setOrigin(0);
-    console.log(scoreLabel);
     const paddedCurrentScore = String(this.currentScore).padStart(7, '0');
     const scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + scoreLabel.height + 20, paddedCurrentScore, {
       fontFamily: 'Courier New',
@@ -179,6 +178,7 @@ export default class GameScene extends Phaser.Scene {
         if (this.gameEngine.isGameOver()) {
           // Handle game over
           console.log('Game Over');
+          this.scene.pause();
           // You can add your game over logic here, such as displaying a game over screen or restarting the game
         }
       }
@@ -196,13 +196,14 @@ export default class GameScene extends Phaser.Scene {
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (board[row][col]) {
-          const blockX = col * this.blockSize;
-          const blockY = row * this.blockSize;
-          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xffffff);
+          const blockX = this.gameBoardX + col * this.blockSize;
+          const blockY = this.gameBoardY + row * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xffffff).setOrigin(0);
         }
       }
     }
   }
+  
   drawCurrentPiece() {
     const { currentPiece } = this.gameEngine;
     const { shape, position } = currentPiece;
