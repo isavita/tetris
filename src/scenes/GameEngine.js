@@ -40,7 +40,7 @@ export default class GameEngine {
         break;
     }
   }
-  
+
   checkCollision(x, y) {
     const shape = this.currentPiece.shape;
     const rows = shape.length;
@@ -58,28 +58,93 @@ export default class GameEngine {
   }
 
   rotatePiece(clockwise = true) {
-    const rotatedShape = [];
-    const rows = this.currentPiece.shape.length;
-    const cols = this.currentPiece.shape[0].length;
+    const rotatedShape = this.getRotatedShape(clockwise);
+    const { x, y } = this.currentPiece.position;
+  
+    let newX = x;
+    let newY = y;
+  
+    if (clockwise) {
+      for (let col = 0; col < rotatedShape[0].length; col++) {
+        const newRow = rotatedShape[col];
+        for (let row = 0; row < newRow.length; row++) {
+          if (newRow[row]) {
+            newX = Math.max(0, x - row + 1);
+            break;
+          }
+        }
+        break;
+      }
+    } else {
+      for (let row = 0; row < rotatedShape.length; row++) {
+        const newRow = rotatedShape[row];
+        for (let col = newRow.length - 1; col >= 0; col--) {
+          if (newRow[col]) {
+            newY = Math.max(0, y - newRow.length + 1 + col);
+            break;
+          }
+        }
+        break;
+      }
+    }
+  
+    if (!this.checkCollisionRotation(rotatedShape, newX, newY)) {
+      this.currentPiece.shape = rotatedShape;
+    } else {
+      // Reset the position if there's a collision
+      this.currentPiece.position = { x, y };
+    }
+  }
 
+  getRotatedShape(clockwise) {
+    const shape = this.currentPiece.shape;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const rotatedShape = [];
+  
     if (clockwise) {
       for (let col = 0; col < cols; col++) {
         const newRow = [];
         for (let row = rows - 1; row >= 0; row--) {
-          newRow.push(this.currentPiece.shape[row][col]);
+          newRow.push(shape[row][col]);
         }
         rotatedShape.push(newRow);
       }
     } else {
       for (let col = cols - 1; col >= 0; col--) {
         const newRow = [];
-        for (let row = 0; row < rows; row++) {
-          newRow.push(this.currentPiece.shape[row][col]);
+        for (let row = rows - 1; row >= 0; row--) {
+          newRow.push(shape[row][col]);
         }
-        rotatedShape.push(newRow);
+        rotatedShape.unshift(newRow);
       }
     }
-
-    this.currentPiece.shape = rotatedShape;
+  
+    return rotatedShape;
+  }
+  checkCollisionRotation(rotatedShape, x, y) {
+    const rows = rotatedShape.length;
+    const cols = rotatedShape[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (rotatedShape[row][col]) {
+          const newX = x + col;
+          const newY = y + row;
+  
+          if (
+            newX < 0 ||
+            newX >= this.board[0].length ||
+            newY < 0 ||
+            newY >= this.board.length ||
+            (newX < this.board[0].length && this.board[newY][newX])
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+  
+    return false;
   }
 }

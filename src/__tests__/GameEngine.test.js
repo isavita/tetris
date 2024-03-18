@@ -284,5 +284,89 @@ describe('GameEngine', () => {
         [0, 1],
       ]);
     });
+
+    test('does not rotate the I-shape if it collides with the board boundaries', () => {
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 7, y: 0 },
+      };
+
+      const originalShape = gameEngine.currentPiece.shape;
+
+      gameEngine.rotatePiece();
+
+      expect(gameEngine.currentPiece.shape).toEqual(originalShape);
+    });
+
+    test('does not rotate the T-shape if it collides with other pieces on the board', () => {
+      gameEngine.board = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+      ];
+
+      gameEngine.currentPiece = {
+        shape: [
+          [0, 1, 0],
+          [1, 1, 1],
+        ],
+        position: { x: 3, y: 0 },
+      };
+
+      const originalShape = gameEngine.currentPiece.shape;
+
+      gameEngine.rotatePiece();
+
+      expect(gameEngine.currentPiece.shape).toEqual(originalShape);
+    });
+
+    test('rotates the I-shape clockwise if there is no collision', () => {
+      gameEngine.board = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      ];
+
+      gameEngine.currentPiece = {
+        shape: [[1, 1, 1, 1]],
+        position: { x: 3, y: 0 },
+      };
+
+      gameEngine.rotatePiece();
+
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [1],
+        [1],
+        [1],
+        [1],
+      ]);
+    });
+
+    test('rotates the T-shape counterclockwise if there is no collision', () => {
+      gameEngine.board = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      ];
+
+      gameEngine.currentPiece = {
+        shape: [
+          [0, 1, 0],
+          [1, 1, 1],
+        ],
+        position: { x: 4, y: 0 },
+      };
+
+      gameEngine.rotatePiece(false);
+
+      expect(gameEngine.currentPiece.shape).toEqual([
+        [1, 0],
+        [1, 1],
+        [1, 0],
+      ]);
+    });
   });
 });
