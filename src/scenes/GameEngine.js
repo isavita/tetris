@@ -2,28 +2,61 @@
 export default class GameEngine {
   constructor() {
     this.board = this.createEmptyBoard();
-    this.currentPiece = this.createNewPiece();
     this.nextPiece = null;
     this.score = 0;
     this.level = 1;
     this.linesCleared = 0;
+    this.shapes = [
+      // I-piece
+      [
+        [1, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+      // J-piece
+      [
+        [1, 0, 0],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      // L-piece
+      [
+        [0, 0, 1],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      // O-piece
+      [
+        [1, 1],
+        [1, 1],
+      ],
+      // S-piece
+      [
+        [0, 1, 1],
+        [1, 1, 0],
+        [0, 0, 0],
+      ],
+      // T-piece
+      [
+        [0, 1, 0],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      // Z-piece
+      [
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 0],
+      ],
+    ];
+    this.currentPiece = this.createNewPiece();
   }
 
   createEmptyBoard() {
     const rows = 20;
     const columns = 10;
     return Array(rows).fill(null).map(() => Array(columns).fill(0));
-  }
-
-  createNewPiece() {
-    // Define the shape and initial position of the new piece
-    const shape = [
-      [1, 1],
-      [1, 1],
-    ];
-    const position = { x: 4, y: 0 };
-
-    return { shape, position };
   }
 
   movePiece(direction) {
@@ -227,5 +260,46 @@ export default class GameEngine {
   
   movePieceRight() {
     this.currentPiece.position.x++;
+  }
+
+  createNewPiece() {
+    console.log(this.shapes);
+    console.log(this.shapes.length);
+    const randomIndex = Math.floor(Math.random() * this.shapes.length);
+    const shape = this.shapes[randomIndex];
+    const position = { x: Math.floor(this.board[0].length / 2) - Math.floor(shape[0].length / 2), y: 0 };
+    return { shape, position };
+  }
+
+  placePiece() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          this.board[position.y + row][position.x + col] = shape[row][col];
+        }
+      }
+    }
+
+    this.currentPiece = this.createNewPiece();
+  }
+
+  isGameOver() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col] && this.board[position.y + row][position.x + col]) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }

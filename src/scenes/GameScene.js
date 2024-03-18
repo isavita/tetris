@@ -174,6 +174,13 @@ export default class GameScene extends Phaser.Scene {
       if (this.gameEngine.canMovePieceDown()) {
         this.clearPrevPiecePosition();
         this.movePieceDown();
+      } else {
+        this.gameEngine.placePiece();
+        if (this.gameEngine.isGameOver()) {
+          // Handle game over
+          console.log('Game Over');
+          // You can add your game over logic here, such as displaying a game over screen or restarting the game
+        }
       }
     }
 
