@@ -22,6 +22,8 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
+    this.input.keyboard.on('keydown-SHIFT', this.rotatePieceCounterclockwise, this);
     const { width, height } = this.cameras.main;
     const boardWidth = 10;
     const boardHeight = 20;
@@ -283,6 +285,29 @@ export default class GameScene extends Phaser.Scene {
     } else if (this.dasDirection === 'right' && this.gameEngine.canMovePieceRight()) {
       this.clearPrevPiecePosition();
       this.gameEngine.movePieceRight();
+    }
+  }
+
+
+  rotatePieceClockwise() {
+    console.log('rotatePieceClockwise');
+    const rotatedShape = this.gameEngine.getRotatedShape(true);
+    const { x, y } = this.gameEngine.currentPiece.position;
+
+    if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.rotatePiece(true);
+    }
+  }
+
+  rotatePieceCounterclockwise() {
+    console.log('rotatePieceCounterclockwise');
+    const rotatedShape = this.gameEngine.getRotatedShape(false);
+    const { x, y } = this.gameEngine.currentPiece.position;
+
+    if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.rotatePiece(false);
     }
   }
 }

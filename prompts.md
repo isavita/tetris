@@ -6835,3 +6835,84 @@ Let me know if you have any further questions or if there's anything else you'd 
 
 **User:**
 
+Thank you, this works perfectly.
+Now, I would like to add the ability to rotate clockwise and counterclockwise. To rotate clockwise, the user will press the <space> key, and to rotate counterclockwise, the <shift> key will be used. Please incorporate this logic.
+
+**Assistant:**
+
+To add the ability to rotate the current piece clockwise and counterclockwise using the `<space>` and `<shift>` keys, you can modify the `GameScene` class as follows:
+
+```javascript
+// GameScene.js
+create() {
+  // ... (existing code)
+  
+  // Add key listeners for rotation
+  this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
+  this.input.keyboard.on('keydown-SHIFT', this.rotatePieceCounterclockwise, this);
+}
+
+rotatePieceClockwise() {
+  const rotatedShape = this.gameEngine.getRotatedShape(true);
+  const { x, y } = this.gameEngine.currentPiece.position;
+
+  if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+    this.clearPrevPiecePosition();
+    this.gameEngine.rotatePiece(true);
+  }
+}
+
+rotatePieceCounterclockwise() {
+  const rotatedShape = this.gameEngine.getRotatedShape(false);
+  const { x, y } = this.gameEngine.currentPiece.position;
+
+  if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+    this.clearPrevPiecePosition();
+    this.gameEngine.rotatePiece(false);
+  }
+}
+```
+
+Here's what the changes do:
+
+1. In the `create` method, we add key listeners for the `<space>` and `<shift>` keys using `this.input.keyboard.on()`. When the `<space>` key is pressed, it triggers the `rotatePieceClockwise` method, and when the `<shift>` key is pressed, it triggers the `rotatePieceCounterclockwise` method.
+
+2. We define the `rotatePieceClockwise` method, which is called when the `<space>` key is pressed:
+   - It retrieves the rotated shape of the current piece using `this.gameEngine.getRotatedShape(true)` for clockwise rotation.
+   - It checks for collisions using `this.gameEngine.checkCollisionRotation()` with the rotated shape and the current position of the piece.
+   - If there are no collisions, it clears the previous position of the piece using `this.clearPrevPiecePosition()` and rotates the piece using `this.gameEngine.rotatePiece(true)`.
+
+3. Similarly, we define the `rotatePieceCounterclockwise` method, which is called when the `<shift>` key is pressed:
+   - It retrieves the rotated shape of the current piece using `this.gameEngine.getRotatedShape(false)` for counterclockwise rotation.
+   - It checks for collisions using `this.gameEngine.checkCollisionRotation()` with the rotated shape and the current position of the piece.
+   - If there are no collisions, it clears the previous position of the piece using `this.clearPrevPiecePosition()` and rotates the piece using `this.gameEngine.rotatePiece(false)`.
+
+Make sure that the `getRotatedShape`, `checkCollisionRotation`, and `rotatePiece` methods are correctly implemented in the `GameEngine` class as per our previous discussions.
+
+With these modifications, the user can now rotate the current piece clockwise by pressing the `<space>` key and counterclockwise by pressing the `<shift>` key.
+
+Please update your code with these changes and test the game to ensure that the rotation functionality works as expected.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+Thank you this works perfectly. Now let's implement the scoring system. The player will earn points for each line cleared. The scoring system is as follows:
+Scoring in Tetris is based on the number of lines cleared and the level at which they are cleared. Here's a concise description of the scoring system:
+Line Clears:
+Single: 40 points.
+Double: 100 points.
+Triple: 300 points.
+Tetris: 1200 points.
+Level Progression:
+Levels increase every 10 lines cleared, and the speed of the falling tetrominoes (pieces) increases with each level. There are 29 levels in total, with level 29 being unplayable due to the speed.
+Level-Based Scoring:
+For each line cleared, the points earned are multiplied by the level number. For example, a Tetris at level 5 will award 1200 * 5 = 6000 points.
+Soft Drops:
+The game awards 1 point for each row the piece is manually dropped. This encourages faster gameplay and efficient piece placement.
+End of Game:
+The game ends when a piece can no longer be placed on the board, and the player's score is recorded.
+
+Please help me implement this scoring system.
+
+**Assistant:**
