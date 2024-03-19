@@ -6,6 +6,7 @@ export default class GameEngine {
     this.score = 0;
     this.level = 1;
     this.linesCleared = 0;
+    this.softDropScore = 0;
     this.shapes = [
       // I-piece
       [
@@ -273,7 +274,7 @@ export default class GameEngine {
     const { shape, position } = this.currentPiece;
     const rows = shape.length;
     const cols = shape[0].length;
-
+  
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
@@ -281,8 +282,47 @@ export default class GameEngine {
         }
       }
     }
-
+  
     this.currentPiece = this.createNewPiece();
+  }
+
+  clearLines() {
+    let linesCleared = 0;
+    const newBoard = this.board.map(row => [...row]);
+  
+    for (let row = this.board.length - 1; row >= 0; row--) {
+      if (this.board[row].every(cell => cell !== 0)) {
+        newBoard.splice(row, 1);
+        newBoard.unshift(Array(this.board[0].length).fill(0));
+        linesCleared++;
+      }
+    }
+  
+    if (linesCleared > 0) {
+      this.board = newBoard;
+      this.updateScore(linesCleared);
+      this.linesCleared += linesCleared;
+      this.updateLevel();
+    }
+  }
+
+  updateScore(linesCleared) {
+    const basePoints = [0, 40, 100, 300, 1200];
+    const points = basePoints[linesCleared] * this.level;
+    this.score += points;
+    this.score += this.softDropScore;
+    this.softDropScore = 0;
+  }
+
+  updateLevel() {
+    this.level = Math.floor(this.linesCleared / 10) + 1;
+  }
+
+  softDrop() {
+    if (this.canMovePieceDown()) {
+      this.currentPiece.position.y++;
+      this.softDropScore++;
+    }
   }
 
   isGameOver() {

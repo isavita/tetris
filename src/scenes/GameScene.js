@@ -7,7 +7,7 @@ export default class GameScene extends Phaser.Scene {
     this.gameEngine = new GameEngine();
     this.linesCount = 0;
     this.topScore = 251160;
-    this.currentScore = 16512;
+    this.currentScore = 0;
     this.level = 0;
     this.frames = 0;
     this.blockSize = 15;
@@ -99,7 +99,7 @@ export default class GameScene extends Phaser.Scene {
       fill: scoreTextColor,
     }).setOrigin(0);
     const paddedCurrentScore = String(this.currentScore).padStart(7, '0');
-    const scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + scoreLabel.height + 20, paddedCurrentScore, {
+    this.scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + topScoreLabel.height + topScoreValue.height + scoreLabel.height + 20, paddedCurrentScore, {
       fontFamily: 'Courier New',
       fontSize: scoreTextSize,
       fill: scoreTextColor,
@@ -140,7 +140,7 @@ export default class GameScene extends Phaser.Scene {
       fill: levelTextColor,
     }).setOrigin(0.5);
     const levelStr = String(this.level);
-    const levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, levelStr, {
+    this.levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, levelStr, {
       fontFamily: 'Courier New',
       fontSize: '18px',
       fill: levelTextColor,
@@ -186,6 +186,10 @@ export default class GameScene extends Phaser.Scene {
         this.movePieceDown();
       } else {
         this.gameEngine.placePiece();
+        this.gameEngine.clearLines();
+        this.drawBoard(); // Redraw the game board after clearing lines
+        this.updateScoreDisplay();
+        this.updateLevelDisplay();
         if (this.gameEngine.isGameOver()) {
           // Handle game over
           console.log('Game Over');
@@ -199,12 +203,22 @@ export default class GameScene extends Phaser.Scene {
     if (this.isFastFalling && this.frames % this.fastFallInterval === 0) {
       if (this.gameEngine.canMovePieceDown()) {
         this.clearPrevPiecePosition();
-        this.movePieceDown();
+        this.gameEngine.softDrop();
       }
     }
 
     this.drawBoard();
     this.drawCurrentPiece();
+  }
+
+  updateScoreDisplay() {
+    const paddedCurrentScore = String(this.gameEngine.score).padStart(7, '0');
+    this.scoreValue.setText(paddedCurrentScore);
+  }
+
+  updateLevelDisplay() {
+    const levelStr = String(this.gameEngine.level);
+    this.levelValue.setText(levelStr);
   }
 
   drawBoard() {
@@ -214,13 +228,29 @@ export default class GameScene extends Phaser.Scene {
   
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        if (board[row][col]) {
-          const blockX = this.gameBoardX + col * this.blockSize;
-          const blockY = this.gameBoardY + row * this.blockSize;
-          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xffffff).setOrigin(0);
+        const cell = board[row][col];
+        const blockX = this.gameBoardX + col * this.blockSize;
+        const blockY = this.gameBoardY + row * this.blockSize;
+  
+        if (cell !== 0) {
+          const color = this.getColorForPiece(cell);
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+        } else {
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
         }
       }
     }
+  }
+  getColorForPiece(value) {
+    // Define colors for each piece type
+    const colors = {
+      1: 0xff0000, // Red
+      2: 0x00ff00, // Green
+      3: 0x0000ff, // Blue
+      // Add more colors for different piece types
+    };
+  
+    return colors[value] || 0xffffff; // Default to white if color not defined
   }
   
   drawCurrentPiece() {
@@ -290,7 +320,6 @@ export default class GameScene extends Phaser.Scene {
 
 
   rotatePieceClockwise() {
-    console.log('rotatePieceClockwise');
     const rotatedShape = this.gameEngine.getRotatedShape(true);
     const { x, y } = this.gameEngine.currentPiece.position;
 
@@ -301,7 +330,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   rotatePieceCounterclockwise() {
-    console.log('rotatePieceCounterclockwise');
     const rotatedShape = this.gameEngine.getRotatedShape(false);
     const { x, y } = this.gameEngine.currentPiece.position;
 

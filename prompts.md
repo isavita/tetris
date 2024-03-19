@@ -6916,3 +6916,719 @@ The game ends when a piece can no longer be placed on the board, and the player'
 Please help me implement this scoring system.
 
 **Assistant:**
+
+To implement the scoring system based on the provided rules, you can modify the `GameEngine` and `GameScene` classes. Let's start with the `GameEngine` class:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  constructor() {
+    // ... (existing code)
+    this.score = 0;
+    this.level = 1;
+    this.linesCleared = 0;
+    this.softDropScore = 0;
+  }
+
+  // ... (existing methods)
+
+  clearLines() {
+    let linesCleared = 0;
+    for (let row = this.board.length - 1; row >= 0; row--) {
+      if (this.board[row].every(cell => cell !== 0)) {
+        this.board.splice(row, 1);
+        this.board.unshift(Array(this.board[0].length).fill(0));
+        linesCleared++;
+      }
+    }
+
+    if (linesCleared > 0) {
+      this.updateScore(linesCleared);
+      this.linesCleared += linesCleared;
+      this.updateLevel();
+    }
+  }
+
+  updateScore(linesCleared) {
+    const basePoints = [0, 40, 100, 300, 1200];
+    const points = basePoints[linesCleared] * this.level;
+    this.score += points;
+    this.score += this.softDropScore;
+    this.softDropScore = 0;
+  }
+
+  updateLevel() {
+    this.level = Math.floor(this.linesCleared / 10) + 1;
+  }
+
+  softDrop() {
+    if (this.canMovePieceDown()) {
+      this.currentPiece.position.y++;
+      this.softDropScore++;
+    }
+  }
+}
+```
+
+And now, let's update the `GameScene` class:
+
+```javascript
+// GameScene.js
+update() {
+  // ... (existing code)
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    if (this.gameEngine.canMovePieceDown()) {
+      this.clearPrevPiecePosition();
+      this.movePieceDown();
+    } else {
+      this.gameEngine.placePiece();
+      this.gameEngine.clearLines();
+      if (this.gameEngine.isGameOver()) {
+        // Handle game over
+        console.log('Game Over');
+        this.scene.pause();
+        // You can add your game over logic here, such as displaying a game over screen or restarting the game
+      }
+      this.isFastFalling = false; // Reset fast falling when the piece is placed
+    }
+  }
+
+  if (this.isFastFalling && this.frames % this.fastFallInterval === 0) {
+    if (this.gameEngine.canMovePieceDown()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.softDrop();
+    }
+  }
+
+  // ... (existing code)
+}
+
+// ... (existing methods)
+```
+
+Here's what the changes do:
+
+1. In the `GameEngine` class:
+   - We initialize the `score`, `level`, `linesCleared`, and `softDropScore` properties in the constructor.
+   - We define the `clearLines` method, which checks for completed lines, removes them, and updates the score, lines cleared, and level accordingly.
+   - The `updateScore` method calculates the points based on the number of lines cleared and the current level, and adds them to the score along with the soft drop score.
+   - The `updateLevel` method updates the level based on the number of lines cleared.
+   - The `softDrop` method is called when the player manually drops the piece, incrementing the soft drop score.
+
+2. In the `GameScene` class:
+   - In the `update` method, after placing the piece, we call the `clearLines` method to check for completed lines and update the score and level.
+   - When fast falling, we call the `softDrop` method instead of `movePieceDown` to increment the soft drop score.
+
+With these modifications, the scoring system should now work according to the provided rules. The player will earn points based on the number of lines cleared, multiplied by the current level. The level will increase every 10 lines cleared, and the soft drop score will be added to the total score.
+
+You can further enhance the game by displaying the current score, level, and lines cleared on the screen and updating them as the game progresses.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+Thank you! I can notice a few problems with the scoring.
+
+1. The lines are not cleared once they are completed.
+2. The score is not displayed on the screen.
+3. The level is not displayed on the screen.
+
+Could you help me fix these issues?
+
+**Assistant:**
+
+Certainly! Let's address each issue one by one.
+
+1. Clearing completed lines:
+   - Modify the `clearLines` method in the `GameEngine` class to correctly remove completed lines and shift the remaining lines down.
+
+```javascript
+// GameEngine.js
+clearLines() {
+  let linesCleared = 0;
+  for (let row = this.board.length - 1; row >= 0; row--) {
+    if (this.board[row].every(cell => cell !== 0)) {
+      this.board.splice(row, 1);
+      this.board.unshift(Array(this.board[0].length).fill(0));
+      linesCleared++;
+      row++; // Re-check the current row after shifting the lines down
+    }
+  }
+
+  if (linesCleared > 0) {
+    this.updateScore(linesCleared);
+    this.linesCleared += linesCleared;
+    this.updateLevel();
+  }
+}
+```
+
+2. Displaying the score on the screen:
+   - Update the `create` method in the `GameScene` class to store a reference to the score text.
+   - Add a new method `updateScoreDisplay` to update the score text.
+   - Call the `updateScoreDisplay` method in the `update` method after updating the score.
+
+```javascript
+// GameScene.js
+create() {
+  // ... (existing code)
+  this.scoreValue = this.add.text(/* ... */);
+  // ... (existing code)
+}
+
+updateScoreDisplay() {
+  const paddedCurrentScore = String(this.gameEngine.score).padStart(7, '0');
+  this.scoreValue.setText(paddedCurrentScore);
+}
+
+update() {
+  // ... (existing code)
+  if (this.frames >= framesPerGridCell) {
+    // ... (existing code)
+    if (this.gameEngine.canMovePieceDown()) {
+      // ... (existing code)
+    } else {
+      // ... (existing code)
+      this.updateScoreDisplay();
+      // ... (existing code)
+    }
+  }
+  // ... (existing code)
+}
+```
+
+3. Displaying the level on the screen:
+   - Update the `create` method in the `GameScene` class to store a reference to the level text.
+   - Add a new method `updateLevelDisplay` to update the level text.
+   - Call the `updateLevelDisplay` method in the `update` method after updating the level.
+
+```javascript
+// GameScene.js
+create() {
+  // ... (existing code)
+  this.levelValue = this.add.text(/* ... */);
+  // ... (existing code)
+}
+
+updateLevelDisplay() {
+  const levelStr = String(this.gameEngine.level);
+  this.levelValue.setText(levelStr);
+}
+
+update() {
+  // ... (existing code)
+  if (this.frames >= framesPerGridCell) {
+    // ... (existing code)
+    if (this.gameEngine.canMovePieceDown()) {
+      // ... (existing code)
+    } else {
+      // ... (existing code)
+      this.updateLevelDisplay();
+      // ... (existing code)
+    }
+  }
+  // ... (existing code)
+}
+```
+
+With these modifications:
+1. The `clearLines` method will correctly remove completed lines and shift the remaining lines down.
+2. The score will be displayed on the screen and updated whenever the score changes.
+3. The level will be displayed on the screen and updated whenever the level changes.
+
+Please incorporate these changes into your code and test the game to ensure that the scoring, line clearing, and display of score and level are working as expected.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+Thank you! Your solution fix 2 and 3 problems. However, the lines are still not being cleared. Could you help me fix this issue?
+
+**Assistant:**
+
+I apologize for the confusion. Let's take a closer look at the `clearLines` method in the `GameEngine` class to fix the issue with clearing completed lines.
+
+Here's the updated `clearLines` method:
+
+```javascript
+// GameEngine.js
+clearLines() {
+  let linesCleared = 0;
+  for (let row = this.board.length - 1; row >= 0; row--) {
+    if (this.board[row].every(cell => cell !== 0)) {
+      this.board.splice(row, 1);
+      this.board.unshift(Array(this.board[0].length).fill(0));
+      linesCleared++;
+    }
+  }
+
+  if (linesCleared > 0) {
+    this.updateScore(linesCleared);
+    this.linesCleared += linesCleared;
+    this.updateLevel();
+  }
+}
+```
+
+In the updated `clearLines` method:
+- We iterate over the rows of the game board from bottom to top.
+- For each row, we check if all cells in that row are non-zero (i.e., the row is completely filled).
+- If a row is completely filled:
+  - We remove that row using `this.board.splice(row, 1)`.
+  - We add a new empty row at the top of the board using `this.board.unshift(Array(this.board[0].length).fill(0))`.
+  - We increment the `linesCleared` counter.
+- After iterating over all rows, if any lines were cleared (`linesCleared > 0`):
+  - We update the score by calling `this.updateScore(linesCleared)`.
+  - We update the total lines cleared by adding `linesCleared` to `this.linesCleared`.
+  - We update the level by calling `this.updateLevel()`.
+
+Now, to ensure that the cleared lines are reflected on the game board visually, you need to redraw the game board after clearing the lines. Update the `update` method in the `GameScene` class:
+
+```javascript
+// GameScene.js
+update() {
+  // ... (existing code)
+  if (this.frames >= framesPerGridCell) {
+    // ... (existing code)
+    if (this.gameEngine.canMovePieceDown()) {
+      // ... (existing code)
+    } else {
+      // ... (existing code)
+      this.gameEngine.clearLines();
+      this.drawBoard(); // Redraw the game board after clearing lines
+      this.updateScoreDisplay();
+      this.updateLevelDisplay();
+      // ... (existing code)
+    }
+  }
+  // ... (existing code)
+}
+```
+
+By calling `this.drawBoard()` after `this.gameEngine.clearLines()`, the game board will be redrawn with the updated state after clearing any completed lines.
+
+With these modifications, the completed lines should now be properly cleared, and the game board should be updated accordingly.
+
+Please update your code with these changes and test the game to ensure that the line clearing functionality is working as expected.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+Okay, I think I've understood the issue. At the moment we have the current piece that is moving being displayed red however once it is placed on the board it is displayed as white.
+I would like to keep the color of the piece even after it is placed on the board. Be careful to ensure we don't draw on top of the piece white and this white to be staying on the board even after we complete a line. I am thinking this because I still can see the pieces not disappearing after completing a line, but also seeing the white color on the board and occasionally seeing the red color on the board like some buggy behavior.
+
+**Assistant:**
+
+I see. To keep the color of the piece even after it is placed on the board and ensure that the completed lines are properly cleared, we need to make a few changes to the `GameEngine` and `GameScene` classes.
+
+First, let's update the `GameEngine` class to store the color of each placed piece on the board:
+
+```javascript
+// GameEngine.js
+placePiece() {
+  const { shape, position } = this.currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        this.board[position.y + row][position.x + col] = shape[row][col];
+      }
+    }
+  }
+
+  this.currentPiece = this.createNewPiece();
+}
+```
+
+In the `placePiece` method, instead of setting the board cells to a non-zero value, we set them to the actual value of the piece's shape, which will represent the color.
+
+Now, let's update the `GameScene` class to draw the placed pieces with their respective colors:
+
+```javascript
+// GameScene.js
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cell = board[row][col];
+      if (cell !== 0) {
+        const blockX = this.gameBoardX + col * this.blockSize;
+        const blockY = this.gameBoardY + row * this.blockSize;
+        const color = this.getColorForPiece(cell);
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+      }
+    }
+  }
+}
+
+getColorForPiece(value) {
+  // Define colors for each piece type
+  const colors = {
+    1: 0xff0000, // Red
+    2: 0x00ff00, // Green
+    3: 0x0000ff, // Blue
+    // Add more colors for different piece types
+  };
+
+  return colors[value] || 0xffffff; // Default to white if color not defined
+}
+```
+
+In the `drawBoard` method, we iterate over each cell of the board. If the cell value is non-zero, we determine the color of the piece based on its value using the `getColorForPiece` method. The `getColorForPiece` method maps the piece values to their corresponding colors. You can define colors for each piece type as needed.
+
+Finally, make sure to call `this.drawBoard()` after clearing the lines in the `update` method of the `GameScene` class:
+
+```javascript
+// GameScene.js
+update() {
+  // ... (existing code)
+  if (this.frames >= framesPerGridCell) {
+    // ... (existing code)
+    if (this.gameEngine.canMovePieceDown()) {
+      // ... (existing code)
+    } else {
+      // ... (existing code)
+      this.gameEngine.clearLines();
+      this.drawBoard(); // Redraw the game board after clearing lines
+      this.updateScoreDisplay();
+      this.updateLevelDisplay();
+      // ... (existing code)
+    }
+  }
+  // ... (existing code)
+}
+```
+
+With these modifications:
+- The placed pieces will retain their colors on the board.
+- The completed lines will be properly cleared, and the board will be redrawn with the updated state.
+- There should be no white color remaining on the board after completing a line.
+
+Please update your code with these changes and test the game to ensure that the placed pieces retain their colors and the completed lines are correctly cleared.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+This keeps the color of the pieces thank you. However, the completed lines are not removed. The should be removed and all pieces above should move down to fill the gap. This should happen before the next piece is placed. Could you help me fix this issue?
+
+**Assistant:**
+
+Apologies for the confusion. Let's modify the `clearLines` method in the `GameEngine` class to properly remove the completed lines and shift the remaining pieces down before placing the next piece.
+
+Here's the updated `clearLines` method:
+
+```javascript
+// GameEngine.js
+clearLines() {
+  let linesCleared = 0;
+  const newBoard = [...this.board];
+
+  for (let row = this.board.length - 1; row >= 0; row--) {
+    if (this.board[row].every(cell => cell !== 0)) {
+      newBoard.splice(row, 1);
+      newBoard.unshift(Array(this.board[0].length).fill(0));
+      linesCleared++;
+    }
+  }
+
+  if (linesCleared > 0) {
+    this.board = newBoard;
+    this.updateScore(linesCleared);
+    this.linesCleared += linesCleared;
+    this.updateLevel();
+  }
+}
+```
+
+In the updated `clearLines` method:
+- We create a new array `newBoard` as a copy of the current board using the spread operator (`...`).
+- We iterate over the rows of the game board from bottom to top.
+- For each row, we check if all cells in that row are non-zero (i.e., the row is completely filled).
+- If a row is completely filled:
+  - We remove that row from `newBoard` using `newBoard.splice(row, 1)`.
+  - We add a new empty row at the top of `newBoard` using `newBoard.unshift(Array(this.board[0].length).fill(0))`.
+  - We increment the `linesCleared` counter.
+- After iterating over all rows, if any lines were cleared (`linesCleared > 0`):
+  - We update the `board` with the modified `newBoard`.
+  - We update the score by calling `this.updateScore(linesCleared)`.
+  - We update the total lines cleared by adding `linesCleared` to `this.linesCleared`.
+  - We update the level by calling `this.updateLevel()`.
+
+Now, let's update the `update` method in the `GameScene` class to redraw the board after clearing the lines:
+
+```javascript
+// GameScene.js
+update() {
+  // ... (existing code)
+  if (this.frames >= framesPerGridCell) {
+    // ... (existing code)
+    if (this.gameEngine.canMovePieceDown()) {
+      // ... (existing code)
+    } else {
+      this.gameEngine.placePiece();
+      this.gameEngine.clearLines();
+      this.drawBoard(); // Redraw the game board after clearing lines
+      this.updateScoreDisplay();
+      this.updateLevelDisplay();
+      // ... (existing code)
+    }
+  }
+  // ... (existing code)
+}
+```
+
+In the `update` method, we call `this.gameEngine.clearLines()` after placing the piece and before redrawing the board. This ensures that the completed lines are removed and the remaining pieces are shifted down before the next piece is placed.
+
+With these modifications, the completed lines should be properly removed, and the remaining pieces should move down to fill the gap before the next piece is placed.
+
+Please update your code with these changes and test the game to ensure that the completed lines are cleared correctly and the pieces move down as expected.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+This change didn't fix the problem. Let's think step by step to make sure we get the right answer. Your clearLines method correctly identifies and clears the full lines, but it might not properly handle the moving down of the pieces above the cleared lines. It is worth also to make sure that 1) all lines that are full are cleared and on there place is drawn squares with the background color which is black, 2) all pieces above the cleared lines are moved down to fill the gap, 3) the score is updated correctly, 4) the level is updated correctly, 5) the game is not over when the lines are cleared, 6) the next piece is placed correctly. Could you help me fix this issue?
+
+**Assistant:**
+
+Apologies for the confusion. Let's go through each step you mentioned and make sure we handle them correctly in the `clearLines` method of the `GameEngine` class.
+
+Here's the updated `clearLines` method:
+
+```javascript
+// GameEngine.js
+clearLines() {
+  let linesCleared = 0;
+  const newBoard = this.board.slice();
+
+  for (let row = this.board.length - 1; row >= 0; row--) {
+    if (this.board[row].every(cell => cell !== 0)) {
+      newBoard.splice(row, 1);
+      newBoard.unshift(Array(this.board[0].length).fill(0));
+      linesCleared++;
+    }
+  }
+
+  if (linesCleared > 0) {
+    this.board = newBoard;
+    this.updateScore(linesCleared);
+    this.linesCleared += linesCleared;
+    this.updateLevel();
+  }
+}
+```
+
+Let's go through each step:
+
+1. Clear all full lines and draw squares with the background color (black):
+   - We create a new array `newBoard` as a copy of the current board using `this.board.slice()`.
+   - We iterate over the rows of the game board from bottom to top.
+   - For each row, we check if all cells in that row are non-zero (i.e., the row is completely filled).
+   - If a row is completely filled, we remove that row from `newBoard` using `newBoard.splice(row, 1)` and add a new empty row at the top of `newBoard` using `newBoard.unshift(Array(this.board[0].length).fill(0))`.
+
+2. Move all pieces above the cleared lines down to fill the gap:
+   - By removing the cleared lines from `newBoard` and adding empty rows at the top, we effectively shift all the pieces above the cleared lines down.
+
+3. Update the score correctly:
+   - After clearing the lines, if any lines were cleared (`linesCleared > 0`), we call `this.updateScore(linesCleared)` to update the score based on the number of lines cleared.
+
+4. Update the level correctly:
+   - After clearing the lines and updating the score, we call `this.updateLevel()` to update the level based on the total number of lines cleared.
+
+5. Ensure the game is not over when the lines are cleared:
+   - The `clearLines` method only removes the completed lines and updates the board, score, and level. It does not affect the game over condition.
+
+6. Place the next piece correctly:
+   - After clearing the lines, we assign the modified `newBoard` to `this.board` to update the game board state.
+   - The next piece will be placed correctly based on the updated game board.
+
+Now, let's update the `update` method in the `GameScene` class to redraw the board after clearing the lines:
+
+```javascript
+// GameScene.js
+update() {
+  // ... (existing code)
+  if (this.frames >= framesPerGridCell) {
+    // ... (existing code)
+    if (this.gameEngine.canMovePieceDown()) {
+      // ... (existing code)
+    } else {
+      this.gameEngine.placePiece();
+      this.gameEngine.clearLines();
+      this.drawBoard(); // Redraw the game board after clearing lines
+      this.updateScoreDisplay();
+      this.updateLevelDisplay();
+      // ... (existing code)
+    }
+  }
+  // ... (existing code)
+}
+```
+
+In the `update` method, we call `this.gameEngine.clearLines()` after placing the piece and before redrawing the board. This ensures that the completed lines are removed, and the remaining pieces are shifted down before the next piece is placed.
+
+Please update your code with these changes and test the game to ensure that all the steps you mentioned are handled correctly.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+This change didn't fix the problem. I added a console.log statement to the clearLines method to see if it is being called. 
+```javascript
+  clearLines() {
+    let linesCleared = 0;
+    const newBoard = this.board.slice();
+    console.log(newBoard)
+  
+    for (let row = this.board.length - 1; row >= 0; row--) {
+      if (this.board[row].every(cell => cell !== 0)) {
+        newBoard.splice(row, 1);
+        newBoard.unshift(Array(this.board[0].length).fill(0));      linesCleared++;
+      }
+    }
+  
+    if (linesCleared > 0) {
+      console.log(newBoard)
+      this.board = newBoard;
+      this.updateScore(linesCleared);
+      this.linesCleared += linesCleared;
+      this.updateLevel();
+    }
+  }
+```
+here is the log after a few moves
+```javascript
+0
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+1
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+2
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+3
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+4
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+5
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+6
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+7
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+8
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+9
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+10
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+11
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+12
+: 
+(10) [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+13
+: 
+(10) [0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+14
+: 
+(10) [0, 0, 0, 0, 1, 1, 1, 0, 0, 0]
+15
+: 
+(10) [0, 0, 0, 0, 0, 1, 1, 0, 0, 0]
+16
+: 
+(10) [0, 0, 0, 0, 1, 1, 1, 0, 0, 0]
+17
+: 
+(10) [0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+18
+: 
+(10) [1, 0, 0, 0, 0, 1, 1, 0, 1, 1]
+19
+: 
+(10) [1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+```
+It seems that the newBoard is not being updated correctly. Could you help me fix this issue? Probably the shape check is not working when we are drawing the newBoard or something else is wrong.
+
+**Assistant:**
+
+I apologize for the confusion. Based on the log output, it appears that the `clearLines` method is being called, but the `newBoard` is not being updated correctly. Let's take a closer look at the `clearLines` method and make some adjustments.
+
+Here's the updated `clearLines` method:
+
+```javascript
+// GameEngine.js
+clearLines() {
+  let linesCleared = 0;
+  const newBoard = this.board.map(row => [...row]);
+
+  for (let row = this.board.length - 1; row >= 0; row--) {
+    if (this.board[row].every(cell => cell !== 0)) {
+      newBoard.splice(row, 1);
+      newBoard.unshift(Array(this.board[0].length).fill(0));
+      linesCleared++;
+    }
+  }
+
+  if (linesCleared > 0) {
+    this.board = newBoard;
+    this.updateScore(linesCleared);
+    this.linesCleared += linesCleared;
+    this.updateLevel();
+  }
+}
+```
+
+The main change in the updated `clearLines` method is how we create the `newBoard`. Instead of using `this.board.slice()`, we use `this.board.map(row => [...row])` to create a deep copy of the board. This ensures that the `newBoard` is a separate copy and any modifications made to it won't affect the original `this.board`.
+
+Now, let's update the `drawBoard` method in the `GameScene` class to properly draw the cleared lines:
+
+```javascript
+// GameScene.js
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cell = board[row][col];
+      const blockX = this.gameBoardX + col * this.blockSize;
+      const blockY = this.gameBoardY + row * this.blockSize;
+
+      if (cell !== 0) {
+        const color = this.getColorForPiece(cell);
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+      } else {
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+      }
+    }
+  }
+}
+```
+
+In the updated `drawBoard` method, we draw a black rectangle for each cell that is equal to zero (empty cell). This ensures that the cleared lines are properly erased and replaced with the background color.
+
+Please update your code with these changes and test the game again. The completed lines should now be cleared correctly, and the pieces above the cleared lines should move down to fill the gap.
+
+Let me know if you encounter any further issues or if there's anything else you'd like to discuss regarding the game.
