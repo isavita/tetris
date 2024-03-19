@@ -54,8 +54,9 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0);
 
     // Create the game board
-    const gameBoardX = linesBoxX;
-    const gameBoardY = linesBoxY + linesBoxHeight + gap;
+    const borderThickness = 2;
+    const gameBoardX = linesBoxX + borderThickness; // adjusted for border thickness
+    const gameBoardY = linesBoxY + linesBoxHeight + gap + borderThickness; // adjusted for border thickness
     this.gameBoardX = gameBoardX;
     this.gameBoardY = gameBoardY;
     const gameBoard = this.add.grid(
@@ -70,6 +71,16 @@ export default class GameScene extends Phaser.Scene {
       0xffffff,
       1
     ).setOrigin(0);
+
+    // Draw a border around the game board
+    const border = this.add.graphics();
+    border.lineStyle(borderThickness, 0xffffff, 1);
+    border.strokeRect(
+      gameBoardX - borderThickness, // Subtract the borderThickness to position correctly
+      gameBoardY - borderThickness, // Subtract the borderThickness to position correctly
+      gameWidth + borderThickness * 2, // Add twice the borderThickness to account for both sides
+      gameHeight + borderThickness * 2 // Add twice the borderThickness to account for both sides
+    );
 
     // Create the top score and current score box
     const scoreBoxWidth = 100;
