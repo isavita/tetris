@@ -16,6 +16,8 @@ export default class GameScene extends Phaser.Scene {
     this.dasInterval = 6; // DAS interval in frames
     this.dasTimer = 0; // DAS timer
     this.dasDirection = null; // DAS direction ('left' or 'right')
+    this.isFastFalling = false;
+    this.fastFallInterval = 2; // Interval for fast falling in frames
   }
 
   create() {
@@ -168,6 +170,13 @@ export default class GameScene extends Phaser.Scene {
       this.dasDirection = null;
     }
 
+    // Handle fast falling
+    if (this.cursors.down.isDown) {
+      this.isFastFalling = true;
+    } else {
+      this.isFastFalling = false;
+    }
+
     if (this.frames >= framesPerGridCell) {
       this.frames = 0;
       if (this.gameEngine.canMovePieceDown()) {
@@ -181,6 +190,14 @@ export default class GameScene extends Phaser.Scene {
           this.scene.pause();
           // You can add your game over logic here, such as displaying a game over screen or restarting the game
         }
+        this.isFastFalling = false; // Reset fast falling when the piece is placed
+      }
+    }
+
+    if (this.isFastFalling && this.frames % this.fastFallInterval === 0) {
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.movePieceDown();
       }
     }
 
