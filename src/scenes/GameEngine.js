@@ -2,7 +2,6 @@
 export default class GameEngine {
   constructor() {
     this.board = this.createEmptyBoard();
-    this.nextPiece = null;
     this.score = 0;
     this.level = 1;
     this.linesCleared = 0;
@@ -51,6 +50,7 @@ export default class GameEngine {
         [0, 0, 0],
       ],
     ];
+    this.nextPiece = this.createNewPiece();
     this.currentPiece = this.createNewPiece();
   }
 
@@ -283,7 +283,8 @@ export default class GameEngine {
       }
     }
   
-    this.currentPiece = this.createNewPiece();
+    this.currentPiece = this.nextPiece;
+    this.nextPiece = this.createNewPiece();
   }
 
   clearLines() {
