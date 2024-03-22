@@ -182,8 +182,15 @@ export default class GameEngine {
   }
 
   getFramesPerGridCell() {
-    const framesPerGridCell = Math.floor(16 / (1 + (this.level * 0.1)));
-    return framesPerGridCell;
+    if (this.level <= 8) {
+      return 48 - this.level * 5;
+    } else if (this.level <= 17) {
+      return 6 - Math.floor((this.level - 8) / 3);
+    } else if (this.level <= 28) {
+      return 2;
+    } else {
+      return 1;
+    }
   }
 
   canMovePieceDown() {
@@ -304,7 +311,11 @@ export default class GameEngine {
   }
 
   updateLevel() {
-    this.level = Math.floor(this.linesCleared / 10) + 1;
+    const prevLevel = this.level;
+    this.level = Math.floor(this.linesCleared / 10);
+    if (this.level !== prevLevel) {
+      console.log(`Level increased to ${this.level}`);
+    }
   }
 
   softDrop() {
