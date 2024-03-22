@@ -106,38 +106,26 @@ export default class GameEngine {
     const rotatedShape = this.getRotatedShape(clockwise);
     const { x, y } = this.currentPiece.position;
   
-    let newX = x;
-    let newY = y;
+    // Check if the rotated shape fits within the board boundaries
+    const shapeFitsBoard = rotatedShape.every((row, rowIndex) =>
+      row.every((cell, colIndex) => {
+        const newX = x + colIndex;
+        const newY = y + rowIndex;
+        return !cell || (newX >= 0 && newX < this.board[0].length && newY < this.board.length);
+      })
+    );
   
-    if (clockwise) {
-      for (let col = 0; col < rotatedShape[0].length; col++) {
-        const newRow = rotatedShape[col];
-        for (let row = 0; row < newRow.length; row++) {
-          if (newRow[row]) {
-            newX = Math.max(0, x - row + 1);
-            break;
-          }
-        }
-        break;
-      }
-    } else {
-      for (let row = 0; row < rotatedShape.length; row++) {
-        const newRow = rotatedShape[row];
-        for (let col = newRow.length - 1; col >= 0; col--) {
-          if (newRow[col]) {
-            newY = Math.max(0, y - newRow.length + 1 + col);
-            break;
-          }
-        }
-        break;
-      }
-    }
+    // Check if the rotated shape collides with any existing pieces on the board
+    const collisionDetected = rotatedShape.some((row, rowIndex) =>
+      row.some((cell, colIndex) => {
+        const newX = x + colIndex;
+        const newY = y + rowIndex;
+        return cell && newY >= 0 && this.board[newY][newX];
+      })
+    );
   
-    if (!this.checkCollisionRotation(rotatedShape, newX, newY)) {
+    if (shapeFitsBoard && !collisionDetected) {
       this.currentPiece.shape = rotatedShape;
-    } else {
-      // Reset the position if there's a collision
-      this.currentPiece.position = { x, y };
     }
   }
 
@@ -146,7 +134,7 @@ export default class GameEngine {
     const rows = shape.length;
     const cols = shape[0].length;
     const rotatedShape = [];
-  
+
     if (clockwise) {
       for (let col = 0; col < cols; col++) {
         const newRow = [];
@@ -164,9 +152,10 @@ export default class GameEngine {
         rotatedShape.unshift(newRow);
       }
     }
-  
+
     return rotatedShape;
   }
+
   checkCollisionRotation(rotatedShape, x, y) {
     const rows = rotatedShape.length;
     const cols = rotatedShape[0].length;
@@ -180,9 +169,8 @@ export default class GameEngine {
           if (
             newX < 0 ||
             newX >= this.board[0].length ||
-            newY < 0 ||
             newY >= this.board.length ||
-            (newX < this.board[0].length && this.board[newY][newX])
+            (newY >= 0 && newX >= 0 && this.board[newY][newX])
           ) {
             return true;
           }
@@ -202,7 +190,7 @@ export default class GameEngine {
     const { shape, position } = this.currentPiece;
     const rows = shape.length;
     const cols = shape[0].length;
-  
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
@@ -213,7 +201,7 @@ export default class GameEngine {
         }
       }
     }
-  
+
     return true;
   }
 
@@ -221,7 +209,7 @@ export default class GameEngine {
     const { shape, position } = this.currentPiece;
     const rows = shape.length;
     const cols = shape[0].length;
-  
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
@@ -232,7 +220,7 @@ export default class GameEngine {
         }
       }
     }
-  
+
     return true;
   }
 
@@ -240,7 +228,7 @@ export default class GameEngine {
     const { shape, position } = this.currentPiece;
     const rows = shape.length;
     const cols = shape[0].length;
-  
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
@@ -251,14 +239,14 @@ export default class GameEngine {
         }
       }
     }
-  
+
     return true;
   }
 
   movePieceLeft() {
     this.currentPiece.position.x--;
   }
-  
+
   movePieceRight() {
     this.currentPiece.position.x++;
   }
@@ -274,7 +262,7 @@ export default class GameEngine {
     const { shape, position } = this.currentPiece;
     const rows = shape.length;
     const cols = shape[0].length;
-  
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
@@ -282,25 +270,24 @@ export default class GameEngine {
         }
       }
     }
-  
+
     this.currentPiece = this.nextPiece;
     this.nextPiece = this.createNewPiece();
   }
 
   clearLines() {
     let linesCleared = 0;
-    const newBoard = this.board.map(row => [...row]);
-  
+
     for (let row = this.board.length - 1; row >= 0; row--) {
       if (this.board[row].every(cell => cell !== 0)) {
-        newBoard.splice(row, 1);
-        newBoard.unshift(Array(this.board[0].length).fill(0));
+        this.board.splice(row, 1);
+        this.board.unshift(Array(this.board[0].length).fill(0));
         linesCleared++;
+        row++; // Re-check the current row after shifting the lines down
       }
     }
-  
+
     if (linesCleared > 0) {
-      this.board = newBoard;
       this.updateScore(linesCleared);
       this.linesCleared += linesCleared;
       this.updateLevel();
@@ -308,8 +295,9 @@ export default class GameEngine {
   }
 
   updateScore(linesCleared) {
-    const basePoints = [0, 40, 100, 300, 1200];
-    const points = basePoints[linesCleared] * this.level;
+    const basePoints = 40;
+    const linePoints = [0, 40, 100, 300, 1200];
+    const points = basePoints + linePoints[linesCleared] * this.level;
     this.score += points;
     this.score += this.softDropScore;
     this.softDropScore = 0;
