@@ -232,6 +232,19 @@ export default class GameScene extends Phaser.Scene {
     return colors[value] || 0xffffff;
   }
 
+  getPieceColor() {
+    const { level } = this.gameEngine;
+    if (level >= 27) {
+      return 0xffa500; // Orange
+    } else if (level >= 18) {
+      return 0x00ff00; // Green
+    } else if (level >= 9) {
+      return 0x0000ff; // Blue
+    } else {
+      return 0xff0000; // Red (default color)
+    }
+  }
+
   drawCurrentPiece() {
     const { currentPiece } = this.gameEngine;
     const { shape, position } = currentPiece;
@@ -239,13 +252,14 @@ export default class GameScene extends Phaser.Scene {
     const cols = shape[0].length;
     const gameBoardX = this.gameBoardX;
     const gameBoardY = this.gameBoardY;
-
+    const pieceColor = this.getPieceColor();
+  
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
           const blockX = gameBoardX + (position.x + col) * this.blockSize;
           const blockY = gameBoardY + (position.y + row) * this.blockSize;
-          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xff0000).setOrigin(0);
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
         }
       }
     }

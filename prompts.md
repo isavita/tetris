@@ -9623,3 +9623,71 @@ Please update your code with the modified `updateLevel` and `getFramesPerGridCel
 If you have any further questions or if there's anything else you'd like to discuss, please let me know!
 
 **User:**
+
+Thank you! I will like to change the colour of the pieces. When I increase the level speed on 9th, 18th and 27th level, I want to change the colour of the pieces. I want to change the colour of the pieces to blue when the level is 9, to green when the level is 18 and to orange when the level is 27. Could you help me with this?
+
+**Assistant:**
+
+Certainly! To change the color of the pieces based on specific levels (9, 18, and 27), you can modify the `GameScene` class.
+
+First, let's define a method called `getPieceColor` in the `GameScene` class to determine the color of the pieces based on the current level:
+
+```javascript
+getPieceColor() {
+  const { level } = this.gameEngine;
+  if (level >= 27) {
+    return 0xffa500; // Orange
+  } else if (level >= 18) {
+    return 0x00ff00; // Green
+  } else if (level >= 9) {
+    return 0x0000ff; // Blue
+  } else {
+    return 0xff0000; // Red (default color)
+  }
+}
+```
+
+In this `getPieceColor` method:
+- We retrieve the current level from the `gameEngine` instance.
+- If the level is 27 or higher, we return the color orange (`0xffa500`).
+- If the level is between 18 and 26 (inclusive), we return the color green (`0x00ff00`).
+- If the level is between 9 and 17 (inclusive), we return the color blue (`0x0000ff`).
+- For levels below 9, we return the default color red (`0xff0000`).
+
+Next, update the `drawCurrentPiece` method in the `GameScene` class to use the `getPieceColor` method when drawing the current piece:
+
+```javascript
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const gameBoardX = this.gameBoardX;
+  const gameBoardY = this.gameBoardY;
+  const pieceColor = this.getPieceColor();
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = gameBoardX + (position.x + col) * this.blockSize;
+        const blockY = gameBoardY + (position.y + row) * this.blockSize;
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+      }
+    }
+  }
+}
+```
+
+In the updated `drawCurrentPiece` method:
+- We call the `getPieceColor` method to determine the color of the current piece based on the level.
+- We use the `pieceColor` variable when creating the rectangle for each block of the current piece.
+
+With these changes, the color of the pieces will change based on the level:
+- For levels 0 to 8, the pieces will be red (default color).
+- At level 9, the pieces will change to blue.
+- At level 18, the pieces will change to green.
+- At level 27 and beyond, the pieces will change to orange.
+
+Please update your code with the new `getPieceColor` method and the modified `drawCurrentPiece` method in the `GameScene` class. Then, test the game to ensure that the piece colors change as expected when reaching levels 9, 18, and 27.
+
+If you have any further questions or if there's anything else you'd like to discuss, please let me know!
