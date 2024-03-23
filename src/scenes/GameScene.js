@@ -14,12 +14,14 @@ export default class GameScene extends Phaser.Scene {
     this.dasDirection = null;
     this.isFastFalling = false;
     this.fastFallInterval = 2;
+    this.isPaused = false;
   }
 
   create() {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
     this.input.keyboard.on('keydown-SHIFT', this.rotatePieceCounterclockwise, this);
+    this.input.keyboard.on('keydown-P', this.togglePause, this);
     const { width, height } = this.cameras.main;
     const boardWidth = 10;
     const boardHeight = 20;
@@ -139,6 +141,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update() {
+    if (this.isPaused) {
+      return;
+    }
     this.frames++;
     const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
 
@@ -361,6 +366,38 @@ export default class GameScene extends Phaser.Scene {
     if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
       this.clearPrevPiecePosition();
       this.gameEngine.rotatePiece(false);
+    }
+  }
+
+  togglePause() {
+    this.isPaused = !this.isPaused;
+  
+    if (this.isPaused) {
+      this.displayPauseMessage();
+    } else {
+      this.hidePauseMessage();
+    }
+  }
+  
+  displayPauseMessage() {
+    const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+    const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+  
+    this.pauseMessage = this.add.text(
+      gameBoardCenterX,
+      gameBoardCenterY,
+      'Game Paused',
+      {
+        fontFamily: 'Arial',
+        fontSize: '18px',
+        fill: '#ffffff',
+      }
+    ).setOrigin(0.5);
+  }
+  hidePauseMessage() {
+    if (this.pauseMessage) {
+      this.pauseMessage.destroy();
+      this.pauseMessage = null;
     }
   }
 }
