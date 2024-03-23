@@ -15,6 +15,7 @@ export default class GameScene extends Phaser.Scene {
     this.isFastFalling = false;
     this.fastFallInterval = 2;
     this.isPaused = false;
+    this.boarderColor = 0xffffff;
   }
 
   create() {
@@ -291,8 +292,11 @@ export default class GameScene extends Phaser.Scene {
         if (shape[row][col]) {
           const blockX = nextBoxX + offsetX + col * smallerBlockSize +10;
           const blockY = nextBoxY + offsetY + row * smallerBlockSize;
+
           this.nextPreviewGraphics.fillStyle(0xff0000);
           this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+          this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
+          this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
         }
       }
     }

@@ -9914,3 +9914,620 @@ With these modifications, the "Game Paused" message will be displayed in the mid
 Please update your code with this modified `displayPauseMessage` method and test the game to ensure that the pause message is positioned correctly and has the desired size.
 
 If you have any further questions or if there's anything else you'd like to discuss, please let me know!
+
+**User:**
+
+Thank you! Could you add boarder arround the square blocks in the game board and in the next piece preview?
+
+**Assistant:**
+
+Certainly! To add borders around the square blocks in the game board and the next piece preview, you can modify the `drawBoard`, `drawCurrentPiece`, and `drawNextPiecePreview` methods in the `GameScene` class.
+
+Here are the updated methods:
+
+1. `drawBoard` method:
+```javascript
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cell = board[row][col];
+      const blockX = this.gameBoardX + col * this.blockSize;
+      const blockY = this.gameBoardY + row * this.blockSize;
+
+      if (cell !== 0) {
+        const color = this.getColorForPiece(cell);
+        const block = this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xffffff, 0.2).setOrigin(0); // Border
+      } else {
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+      }
+    }
+  }
+}
+```
+
+2. `drawCurrentPiece` method:
+```javascript
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const gameBoardX = this.gameBoardX;
+  const gameBoardY = this.gameBoardY;
+  const pieceColor = this.getPieceColor();
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = gameBoardX + (position.x + col) * this.blockSize;
+        const blockY = gameBoardY + (position.y + row) * this.blockSize;
+        const block = this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0xffffff, 0.2).setOrigin(0); // Border
+      }
+    }
+  }
+}
+```
+
+3. `drawNextPiecePreview` method:
+```javascript
+drawNextPiecePreview() {
+  const { nextPiece } = this.gameEngine;
+  const { shape } = nextPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  const nextBoxWidth = 100;
+  const nextBoxHeight = 80;
+  const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
+  const nextBoxY = this.gameBoardY;
+
+  const blockSize = Math.min((nextBoxWidth - 20) / cols, (nextBoxHeight - 20) / rows);
+  const offsetX = (nextBoxWidth - cols * blockSize) / 2;
+  const offsetY = (nextBoxHeight - rows * blockSize) / 2;
+
+  this.nextPreviewGraphics.clear();
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = nextBoxX + offsetX + col * blockSize;
+        const blockY = nextBoxY + offsetY + row * blockSize;
+        this.nextPreviewGraphics.fillStyle(0xff0000);
+        this.nextPreviewGraphics.fillRect(blockX, blockY, blockSize, blockSize);
+        this.nextPreviewGraphics.lineStyle(1, 0xffffff, 0.2); // Border
+        this.nextPreviewGraphics.strokeRect(blockX, blockY, blockSize, blockSize);
+      }
+    }
+  }
+}
+```
+
+In each of these methods, we add an additional rectangle or line stroke to create a border around each square block. The border is drawn with a white color (`0xffffff`) and an alpha value of `0.2` to make it slightly transparent.
+
+Please update your code with these modified methods and test the game to ensure that the square blocks in the game board and the next piece preview have borders around them.
+
+If you have any further questions or if there's anything else you'd like to discuss, please let me know!
+
+**User:**
+
+Thank you, but this code is not working as expected. Here is my current code for GameScene.js
+```javascript
+// GameScene.js
+import GameEngine from "./GameEngine.js";
+
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+    this.gameEngine = new GameEngine();
+    this.frames = 0;
+    this.blockSize = 15;
+    this.cursors = null;
+    this.dasDelay = 16;
+    this.dasInterval = 6;
+    this.dasTimer = 0;
+    this.dasDirection = null;
+    this.isFastFalling = false;
+    this.fastFallInterval = 2;
+    this.isPaused = false;
+  }
+
+  create() {
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
+    this.input.keyboard.on('keydown-SHIFT', this.rotatePieceCounterclockwise, this);
+    this.input.keyboard.on('keydown-P', this.togglePause, this);
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const gameWidth = boardWidth * this.blockSize;
+    const gameHeight = boardHeight * this.blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 20;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 160;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX;
+    const linesBoxY = offsetY;
+    this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const linesTextColor = '#ffffff';
+    const linesTextSize = '18px';
+    const paddedLinesCount = String(this.gameEngine.linesCleared).padStart(3, '0');
+    const linesText = ` LINES - ${paddedLinesCount}`;
+    this.linesCountText = this.add.text(linesBoxX + 10, linesBoxY + 7, linesText, {
+      fontFamily: 'Courier New',
+      fontSize: linesTextSize,
+      fill: linesTextColor,
+    }).setOrigin(0);
+
+    // Create the game board
+    const borderThickness = 2;
+    const gameBoardX = linesBoxX + borderThickness;
+    const gameBoardY = linesBoxY + linesBoxHeight + gap + borderThickness;
+    this.gameBoardX = gameBoardX;
+    this.gameBoardY = gameBoardY;
+    this.add.grid(
+      gameBoardX,
+      gameBoardY,
+      gameWidth,
+      gameHeight,
+      this.blockSize,
+      this.blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    ).setOrigin(0);
+
+    // Draw a border around the game board
+    const border = this.add.graphics();
+    border.lineStyle(borderThickness, 0xffffff, 1);
+    border.strokeRect(
+      gameBoardX - borderThickness,
+      gameBoardY - borderThickness,
+      gameWidth + borderThickness * 2,
+      gameHeight + borderThickness * 2
+    );
+
+    // Create the score box
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = gameBoardX + gameWidth + gap;
+    const scoreBoxY = gameBoardY;
+    this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const scoreTextColor = '#ffffff';
+    const scoreTextSize = '14px';
+    this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'SCORE', {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    const paddedCurrentScore = String(this.gameEngine.score).padStart(7, '0');
+    this.scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + 40, paddedCurrentScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+
+    // Create the next box
+    this.nextBoxWidth = scoreBoxWidth;
+    this.nextBoxHeight = 80;
+    this.nextBoxX = scoreBoxX;
+    this.nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    this.add.rectangle(this.nextBoxX, this.nextBoxY, this.nextBoxWidth, this.nextBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const nextTextColor = '#ffffff';
+    const nextTextSize = '14px';
+    this.add.text(this.nextBoxX + this.nextBoxWidth / 2, this.nextBoxY + 10, 'NEXT', {
+      fontFamily: 'Courier New',
+      fontSize: nextTextSize,
+      fill: nextTextColor,
+    }).setOrigin(0.5);
+    this.nextPreviewGraphics = this.add.graphics();
+    this.drawNextPiecePreview();
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 50;
+    const levelBoxX = this.nextBoxX;
+    const levelBoxY = this.nextBoxY + this.nextBoxHeight + gap;
+    this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const levelTextColor = '#ffffff';
+    const levelTextSize = '14px';
+    this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'Courier New',
+      fontSize: levelTextSize,
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+    const levelStr = String(this.gameEngine.level);
+    this.levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, levelStr, {
+      fontFamily: 'Courier New',
+      fontSize: '18px',
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+
+    // Draw the game board
+    this.drawBoard();
+    this.drawCurrentPiece();
+  }
+
+  update() {
+    if (this.isPaused) {
+      return;
+    }
+    this.frames++;
+    const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+
+    // Handle left and right movement
+    if (this.cursors.left.isDown) {
+      this.handleDAS('left');
+    } else if (this.cursors.right.isDown) {
+      this.handleDAS('right');
+    } else {
+      this.dasDirection = null;
+    }
+
+    // Handle fast falling
+    this.isFastFalling = this.cursors.down.isDown;
+
+    if (this.frames >= framesPerGridCell) {
+      this.frames = 0;
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.movePieceDown();
+      } else {
+        this.gameEngine.placePiece();
+        this.gameEngine.clearLines();
+        this.drawBoard();
+        this.updateScoreDisplay();
+        this.updateLevelDisplay();
+        this.updateLinesCountDisplay();
+        this.drawNextPiecePreview();
+        if (this.gameEngine.isGameOver()) {
+          console.log('Game Over');
+          this.scene.pause();
+        }
+        this.isFastFalling = false;
+      }
+    }
+
+    if (this.isFastFalling && this.frames % this.fastFallInterval === 0) {
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.gameEngine.softDrop();
+      }
+    }
+
+    this.drawCurrentPiece();
+  }
+
+  updateScoreDisplay() {
+    const paddedCurrentScore = String(this.gameEngine.score).padStart(7, '0');
+    this.scoreValue.setText(paddedCurrentScore);
+  }
+
+  updateLevelDisplay() {
+    const levelStr = String(this.gameEngine.level);
+    this.levelValue.setText(levelStr);
+  }
+
+  updateLinesCountDisplay() {
+    const paddedLinesCount = String(this.gameEngine.linesCleared).padStart(3, '0');
+    const linesText = ` LINES - ${paddedLinesCount}`;
+    this.linesCountText.setText(linesText);
+  }
+
+  drawBoard() {
+    const { board } = this.gameEngine;
+    const rows = board.length;
+    const cols = board[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cell = board[row][col];
+        const blockX = this.gameBoardX + col * this.blockSize;
+        const blockY = this.gameBoardY + row * this.blockSize;
+
+        if (cell !== 0) {
+          const color = this.getColorForPiece(cell);
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+        } else {
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  getColorForPiece(value) {
+    const colors = {
+      1: 0xff0000,
+      2: 0x00ff00,
+      3: 0x0000ff,
+    };
+
+    return colors[value] || 0xffffff;
+  }
+
+  getPieceColor() {
+    const { level } = this.gameEngine;
+    if (level >= 27) {
+      return 0xffa500; // Orange
+    } else if (level >= 18) {
+      return 0x00ff00; // Green
+    } else if (level >= 9) {
+      return 0x0000ff; // Blue
+    } else {
+      return 0xff0000; // Red (default color)
+    }
+  }
+
+  drawCurrentPiece() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const gameBoardX = this.gameBoardX;
+    const gameBoardY = this.gameBoardY;
+    const pieceColor = this.getPieceColor();
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  drawNextPiecePreview() {
+    const { nextPiece } = this.gameEngine;
+    const { shape } = nextPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+  
+    const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
+    const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
+  
+    const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
+    const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
+    const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
+  
+    this.nextPreviewGraphics.clear();
+  
+    const smallerBlockSize = blockSize * 0.75;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = nextBoxX + offsetX + col * smallerBlockSize +10;
+          const blockY = nextBoxY + offsetY + row * smallerBlockSize;
+          this.nextPreviewGraphics.fillStyle(0xff0000);
+          this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+        }
+      }
+    }
+  }
+
+  movePieceDown() {
+    const { currentPiece } = this.gameEngine;
+    currentPiece.position.y++;
+  }
+
+  clearPrevPiecePosition() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = this.gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = this.gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  handleDAS(direction) {
+    if (this.dasDirection !== direction) {
+      this.dasTimer = 0;
+      this.dasDirection = direction;
+    }
+
+    if (this.dasTimer === 0) {
+      this.movePieceHorizontally();
+    }
+
+    this.dasTimer++;
+
+    if (this.dasTimer >= this.dasDelay) {
+      if ((this.dasTimer - this.dasDelay) % this.dasInterval === 0) {
+        this.movePieceHorizontally();
+      }
+    }
+  }
+
+  movePieceHorizontally() {
+    if (this.dasDirection === 'left' && this.gameEngine.canMovePieceLeft()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceLeft();
+    } else if (this.dasDirection === 'right' && this.gameEngine.canMovePieceRight()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceRight();
+    }
+  }
+
+  rotatePieceClockwise() {
+    const rotatedShape = this.gameEngine.getRotatedShape(true);
+    const { x, y } = this.gameEngine.currentPiece.position;
+
+    if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.rotatePiece(true);
+    }
+  }
+
+  rotatePieceCounterclockwise() {
+    const rotatedShape = this.gameEngine.getRotatedShape(false);
+    const { x, y } = this.gameEngine.currentPiece.position;
+
+    if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.rotatePiece(false);
+    }
+  }
+
+  togglePause() {
+    this.isPaused = !this.isPaused;
+  
+    if (this.isPaused) {
+      this.displayPauseMessage();
+    } else {
+      this.hidePauseMessage();
+    }
+  }
+  
+  displayPauseMessage() {
+    const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+    const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+  
+    this.pauseMessage = this.add.text(
+      gameBoardCenterX,
+      gameBoardCenterY,
+      'Game Paused',
+      {
+        fontFamily: 'Arial',
+        fontSize: '18px',
+        fill: '#ffffff',
+      }
+    ).setOrigin(0.5);
+  }
+  hidePauseMessage() {
+    if (this.pauseMessage) {
+      this.pauseMessage.destroy();
+      this.pauseMessage = null;
+    }
+  }
+}
+```
+I will like to not change position of boxes, size or any other code apart of drawing the border around the square blocks in the game board and in the next piece preview. Do not add square blocks on the boarder unless there is element in the place. It should be easy to simply add a boarder in drawBoard, drawCurrentPiece and drawNextPiecePreview methods. You can use some color set in the constructor to allow use to change the color of the border if needed (e.g. on different levels).
+
+**Assistant:**
+
+Certainly! Let's update the `drawBoard`, `drawCurrentPiece`, and `drawNextPiecePreview` methods to add borders around the square blocks in the game board and the next piece preview. We'll also add a `borderColor` property in the constructor to allow for changing the border color if needed.
+
+Here are the updated methods:
+
+1. Update the constructor to add the `borderColor` property:
+```javascript
+constructor() {
+  // ... (existing code)
+  this.borderColor = 0xffffff; // Set the initial border color to white
+}
+```
+
+2. Update the `drawBoard` method:
+```javascript
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cell = board[row][col];
+      const blockX = this.gameBoardX + col * this.blockSize;
+      const blockY = this.gameBoardY + row * this.blockSize;
+
+      if (cell !== 0) {
+        const color = this.getColorForPiece(cell);
+        const block = this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, this.borderColor, 0.8).setOrigin(0).setStrokeStyle(1, this.borderColor);
+      } else {
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+      }
+    }
+  }
+}
+```
+
+3. Update the `drawCurrentPiece` method:
+```javascript
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const gameBoardX = this.gameBoardX;
+  const gameBoardY = this.gameBoardY;
+  const pieceColor = this.getPieceColor();
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = gameBoardX + (position.x + col) * this.blockSize;
+        const blockY = gameBoardY + (position.y + row) * this.blockSize;
+        const block = this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, this.borderColor, 0.8).setOrigin(0).setStrokeStyle(1, this.borderColor);
+      }
+    }
+  }
+}
+```
+
+4. Update the `drawNextPiecePreview` method:
+```javascript
+drawNextPiecePreview() {
+  const { nextPiece } = this.gameEngine;
+  const { shape } = nextPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
+  const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
+
+  const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
+  const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
+  const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
+
+  this.nextPreviewGraphics.clear();
+
+  const smallerBlockSize = blockSize * 0.75;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = nextBoxX + offsetX + col * smallerBlockSize + 10;
+        const blockY = nextBoxY + offsetY + row * smallerBlockSize;
+        this.nextPreviewGraphics.fillStyle(0xff0000);
+        this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+        this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
+        this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+      }
+    }
+  }
+}
+```
+
+In each of these methods, we add an additional rectangle or line stroke to create a border around each square block that contains an element. The border is drawn using the `borderColor` property, which is set to white (`0xffffff`) by default. You can change the border color by modifying the `borderColor` property in the constructor or at any other point in the code.
+
+The border is only added to the square blocks that contain an element, so it won't be drawn on empty blocks.
+
+Please update your code with these modified methods and test the game to ensure that the square blocks in the game board and the next piece preview have borders around them.
+
+If you have any further questions or if there's anything else you'd like to discuss, please let me know!
+
+**User:**
+
+Thank you I decided to keep the strokeStyle only in the next piece preview. I did that myself and kept the rest of the code unchanged. However, now I want once the game is over to have on the screen exactly the same message as when the game is paused but with text "Game Over". And if the user press any key the game should restart. Could you help me with this?
