@@ -10531,3 +10531,159 @@ If you have any further questions or if there's anything else you'd like to disc
 **User:**
 
 Thank you I decided to keep the strokeStyle only in the next piece preview. I did that myself and kept the rest of the code unchanged. However, now I want once the game is over to have on the screen exactly the same message as when the game is paused but with text "Game Over". And if the user press any key the game should restart. Could you help me with this?
+
+
+**Assistant:**
+
+Certainly! Let's update the code to display a "Game Over" message when the game ends and restart the game when the user presses any key.
+
+First, let's add a new method called `displayGameOverMessage` in the `GameScene` class to show the "Game Over" message:
+
+```javascript
+displayGameOverMessage() {
+  const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+  const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+
+  this.gameOverMessage = this.add.text(
+    gameBoardCenterX,
+    gameBoardCenterY,
+    'Game Over',
+    {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      fill: '#ffffff',
+    }
+  ).setOrigin(0.5);
+}
+```
+
+This method is similar to the `displayPauseMessage` method, but it displays the "Game Over" message instead.
+
+Next, update the `update` method to display the "Game Over" message when the game ends and listen for any key press to restart the game:
+
+```javascript
+update() {
+  if (this.isPaused) {
+    return;
+  }
+
+  // ... (existing code)
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    if (this.gameEngine.canMovePieceDown()) {
+      this.clearPrevPiecePosition();
+      this.movePieceDown();
+    } else {
+      this.gameEngine.placePiece();
+      this.gameEngine.clearLines();
+      this.drawBoard();
+      this.updateScoreDisplay();
+      this.updateLevelDisplay();
+      this.updateLinesCountDisplay();
+      this.drawNextPiecePreview();
+      if (this.gameEngine.isGameOver()) {
+        console.log('Game Over');
+        this.displayGameOverMessage();
+        this.input.keyboard.once('keydown', this.restartGame, this);
+        return;
+      }
+      this.isFastFalling = false;
+    }
+  }
+
+  // ... (existing code)
+}
+```
+
+In the updated `update` method:
+- When the game is over, we call the `displayGameOverMessage` method to show the "Game Over" message on the screen.
+- We use `this.input.keyboard.once('keydown', this.restartGame, this)` to listen for any key press event. When a key is pressed, it will trigger the `restartGame` method (which we'll define next).
+- We add a `return` statement to exit the `update` method and prevent further game updates.
+
+Finally, add the `restartGame` method to handle restarting the game:
+
+```javascript
+restartGame() {
+  this.scene.restart();
+}
+```
+
+The `restartGame` method simply calls `this.scene.restart()` to restart the current scene, which will reset the game state and start a new game.
+
+With these changes, when the game is over, the "Game Over" message will be displayed on the screen using the same style as the "Game Paused" message. The game will wait for the user to press any key, and when a key is pressed, the game will restart.
+
+Please update your code with these modifications and test the game to ensure that the "Game Over" message is displayed correctly and the game restarts when any key is pressed after the game ends.
+
+If you have any further questions or if there's anything else you'd like to discuss, please let me know!
+
+**User:**
+
+Thank you! There a few problems. It seems like when I press some key after the game is over the game does not restart from the beginning. Could you fix this?
+
+**Assistant:**
+
+Apologies for the confusion. Let's update the code to ensure that the game restarts from the beginning when a key is pressed after the game is over.
+
+Here's the updated `restartGame` method:
+
+```javascript
+restartGame() {
+  this.gameEngine = new GameEngine();
+  this.scene.restart();
+}
+```
+
+In the updated `restartGame` method:
+- We create a new instance of the `GameEngine` class by calling `new GameEngine()`. This ensures that the game state is reset to its initial values, including the score, level, lines cleared, and other properties.
+- We then call `this.scene.restart()` to restart the current scene, which will reinitialize the game scene and start a new game.
+
+By creating a new instance of the `GameEngine` before restarting the scene, we ensure that the game starts from the beginning with the initial game state.
+
+Additionally, let's make a small change to the `update` method to ensure that the game doesn't continue updating after the game is over:
+
+```javascript
+update() {
+  if (this.isPaused || this.gameEngine.isGameOver()) {
+    return;
+  }
+
+  // ... (existing code)
+
+  if (this.frames >= framesPerGridCell) {
+    this.frames = 0;
+    if (this.gameEngine.canMovePieceDown()) {
+      this.clearPrevPiecePosition();
+      this.movePieceDown();
+    } else {
+      this.gameEngine.placePiece();
+      this.gameEngine.clearLines();
+      this.drawBoard();
+      this.updateScoreDisplay();
+      this.updateLevelDisplay();
+      this.updateLinesCountDisplay();
+      this.drawNextPiecePreview();
+      if (this.gameEngine.isGameOver()) {
+        console.log('Game Over');
+        this.displayGameOverMessage();
+        this.input.keyboard.once('keydown', this.restartGame, this);
+      }
+      this.isFastFalling = false;
+    }
+  }
+
+  // ... (existing code)
+}
+```
+
+In the updated `update` method:
+- We modify the condition at the beginning of the method to include a check for `this.gameEngine.isGameOver()`. If the game is over, we immediately return from the `update` method to prevent further game updates.
+- We remove the `return` statement after displaying the "Game Over" message, as it is no longer needed with the updated condition at the beginning of the method.
+
+With these changes, the game should restart from the beginning when a key is pressed after the game is over, and the game should stop updating once the game is over.
+
+Please update your code with these modifications and test the game to ensure that it restarts correctly from the beginning when a key is pressed after the game ends.
+
+If you have any further questions or if there's anything else you'd like to discuss, please let me know!
+
+**User:**

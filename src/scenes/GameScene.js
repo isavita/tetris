@@ -142,9 +142,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.isPaused) {
+    if (this.isPaused || this.gameEngine.isGameOver()) {
       return;
     }
+
     this.frames++;
     const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
 
@@ -174,8 +175,8 @@ export default class GameScene extends Phaser.Scene {
         this.updateLinesCountDisplay();
         this.drawNextPiecePreview();
         if (this.gameEngine.isGameOver()) {
-          console.log('Game Over');
-          this.scene.pause();
+          this.displayGameOverMessage();
+          this.input.keyboard.once('keydown', this.restartGame, this);
         }
         this.isFastFalling = false;
       }
@@ -403,5 +404,26 @@ export default class GameScene extends Phaser.Scene {
       this.pauseMessage.destroy();
       this.pauseMessage = null;
     }
+  }
+
+  displayGameOverMessage() {
+    const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+    const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+  
+    this.gameOverMessage = this.add.text(
+      gameBoardCenterX,
+      gameBoardCenterY,
+      'Game Over',
+      {
+        fontFamily: 'Arial',
+        fontSize: '18px',
+        fill: '#ffffff',
+      }
+    ).setOrigin(0.5);
+  }
+
+  restartGame() {
+    this.gameEngine = new GameEngine();
+    this.scene.restart();
   }
 }
