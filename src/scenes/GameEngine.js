@@ -54,7 +54,7 @@ export default class GameEngine {
     ];
     this.colors = [
       0xff0000, // Red
-      0x00ff00, // Green
+      0x005700, // Green
       0x0000ff, // Blue
       0xffff00, // Yellow
       0xff00ff, // Magenta
@@ -277,20 +277,20 @@ export default class GameEngine {
   createNewPiece() {
     const randomIndex = Math.floor(Math.random() * this.shapes.length);
     const shape = this.shapes[randomIndex];
-    const color = this.colors[randomIndex];
     const position = { x: Math.floor(this.board[0].length / 2) - Math.floor(shape[0].length / 2), y: 0 };
-    return { shape, color, position };
+    return { shape, position };
   }
 
   placePiece() {
-    const { shape, color, position } = this.currentPiece;
+    const { shape, position } = this.currentPiece;
     const rows = shape.length;
     const cols = shape[0].length;
+    const pieceColor = this.level + 1; // Store the current level plus one as the color value
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
-          this.board[position.y + row][position.x + col] = color;
+          this.board[position.y + row][position.x + col] = pieceColor;
         }
       }
     }
@@ -298,6 +298,7 @@ export default class GameEngine {
     this.currentPiece = this.nextPiece;
     this.nextPiece = this.createNewPiece();
   }
+  
   clearLines() {
     let linesCleared = 0;
 

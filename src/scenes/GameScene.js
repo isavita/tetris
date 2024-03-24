@@ -219,25 +219,40 @@ export default class GameScene extends Phaser.Scene {
     const { board } = this.gameEngine;
     const rows = board.length;
     const cols = board[0].length;
-
+  
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const color = board[row][col];
+        const colorValue = board[row][col];
         const blockX = this.gameBoardX + col * this.blockSize;
         const blockY = this.gameBoardY + row * this.blockSize;
-
-        if (color !== 0) {
-          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+  
+        if (colorValue !== 0) {
+          const pieceColor = this.getPieceColorByLevel(colorValue);
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
         } else {
           this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
         }
       }
     }
   }
+
+  getPieceColorByLevel(level) {
+    const adjustedLevel = level - 1;
+    const colorIndex = Math.floor(adjustedLevel / 5) % 4;
+  
+    const colors = [
+      0xff0000, // Red
+      0x005700, // Green
+      0x0000ff, // Blue
+      0xffa500, // Orange
+    ];
+  
+    return colors[colorIndex];
+  }
   getColorForPiece(value) {
     const colors = {
       1: 0xff0000,
-      2: 0x00ff00,
+      2: 0x005700,
       3: 0x0000ff,
     };
 
@@ -246,65 +261,69 @@ export default class GameScene extends Phaser.Scene {
 
   getPieceColor() {
     const { level } = this.gameEngine;
-    if (level >= 27) {
-      return 0xffa500; // Orange
-    } else if (level >= 18) {
-      return 0x00ff00; // Green
-    } else if (level >= 9) {
-      return 0x0000ff; // Blue
-    } else {
-      return 0xff0000; // Red (default color)
-    }
+    const colorIndex = Math.floor(level / 5) % 4;
+  
+    const colors = [
+      0xff0000, // Red
+      0x005700, // Green
+      0x0000ff, // Blue
+      0xffa500, // Orange
+    ];
+  
+    return colors[colorIndex];
   }
 
-  drawCurrentPiece() {
-    const { currentPiece } = this.gameEngine;
-    const { shape, color, position } = currentPiece;
-    const rows = shape.length;
-    const cols = shape[0].length;
-    const gameBoardX = this.gameBoardX;
-    const gameBoardY = this.gameBoardY;
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const gameBoardX = this.gameBoardX;
+  const gameBoardY = this.gameBoardY;
+  const pieceColor = this.getPieceColor();
 
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        if (shape[row][col]) {
-          const blockX = gameBoardX + (position.x + col) * this.blockSize;
-          const blockY = gameBoardY + (position.y + row) * this.blockSize;
-          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
-        }
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = gameBoardX + (position.x + col) * this.blockSize;
+        const blockY = gameBoardY + (position.y + row) * this.blockSize;
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
       }
     }
   }
-  drawNextPiecePreview() {
-    const { nextPiece } = this.gameEngine;
-    const { shape, color } = nextPiece;
-    const rows = shape.length;
-    const cols = shape[0].length;
+}
 
-    const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
-    const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
+drawNextPiecePreview() {
+  const { nextPiece } = this.gameEngine;
+  const { shape } = nextPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const pieceColor = this.getPieceColor();
 
-    const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
-    const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
-    const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
+  const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
+  const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
 
-    this.nextPreviewGraphics.clear();
+  const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
+  const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
+  const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
 
-    const smallerBlockSize = blockSize * 0.75;
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        if (shape[row][col]) {
-          const blockX = nextBoxX + offsetX + col * smallerBlockSize + 10;
-          const blockY = nextBoxY + offsetY + row * smallerBlockSize;
+  this.nextPreviewGraphics.clear();
 
-          this.nextPreviewGraphics.fillStyle(color);
-          this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
-          this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
-          this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
-        }
+  const smallerBlockSize = blockSize * 0.75;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = nextBoxX + offsetX + col * smallerBlockSize + 10;
+        const blockY = nextBoxY + offsetY + row * smallerBlockSize;
+
+        this.nextPreviewGraphics.fillStyle(pieceColor);
+        this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+        this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
+        this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
       }
     }
   }
+}
   movePieceDown() {
     const { currentPiece } = this.gameEngine;
     currentPiece.position.y++;

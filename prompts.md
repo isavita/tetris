@@ -13774,3 +13774,340 @@ Let me know if you have any further questions or if there's anything else you'd 
 **User:**
 
 Thank you! The game works perfectly. However, I would like to change colors of the game on every 5th level. For example, when the level is 5, the color of the game should change to green, when the level is 10, the color should change to blue, and so on. Please help me with this.
+
+**Assistant:**
+
+To change the colors of the game on every 5th level, you can modify the `getPieceColor` method in the `GameScene` class. Instead of using fixed level thresholds, you can calculate the color based on the current level.
+
+Here's the updated `getPieceColor` method:
+
+```javascript
+getPieceColor() {
+  const { level } = this.gameEngine;
+  const colorIndex = Math.floor(level / 5) % 4;
+
+  const colors = [
+    0xff0000, // Red
+    0x00ff00, // Green
+    0x0000ff, // Blue
+    0xffa500, // Orange
+  ];
+
+  return colors[colorIndex];
+}
+```
+
+In this updated `getPieceColor` method:
+
+1. We calculate the `colorIndex` based on the current `level` using the formula `Math.floor(level / 5) % 4`. This formula determines the color index for every 5 levels.
+
+2. We define an array of colors (`colors`) that contains the desired colors for each level range. In this case, we have red, green, blue, and orange.
+
+3. We return the color from the `colors` array based on the calculated `colorIndex`.
+
+With this modification, the colors of the game will change as follows:
+
+- Levels 0-4: Red
+- Levels 5-9: Green
+- Levels 10-14: Blue
+- Levels 15-19: Orange
+- Levels 20-24: Red
+- Levels 25-29: Green
+- And so on...
+
+You can adjust the colors in the `colors` array to match your desired color scheme for each level range.
+
+Additionally, you can update the `drawBoard` method to use the `getPieceColor` method when drawing the placed pieces on the board. This will ensure that the placed pieces also have the corresponding color based on the level.
+
+```javascript
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const color = board[row][col];
+      const blockX = this.gameBoardX + col * this.blockSize;
+      const blockY = this.gameBoardY + row * this.blockSize;
+
+      if (color !== 0) {
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, this.getPieceColor()).setOrigin(0);
+      } else {
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+      }
+    }
+  }
+}
+```
+
+In the updated `drawBoard` method, we use `this.getPieceColor()` instead of directly using the `color` value when drawing the placed pieces. This ensures that the placed pieces have the same color as the current falling piece based on the level.
+
+Please update your `GameScene.js` file with these modifications and test the game. The colors of the game should now change on every 5th level according to the specified color scheme.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+Thank you! They are two missing parts. First, the current piece color should be exactly the same as the level color. Second, the next piece preview should also have the same color as the level color. Can you fix this?
+
+**Assistant:**
+
+Certainly! To ensure that the current piece and the next piece preview have the same color as the level color, you can update the `drawCurrentPiece` and `drawNextPiecePreview` methods in the `GameScene` class.
+
+Here are the updated methods:
+
+```javascript
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const gameBoardX = this.gameBoardX;
+  const gameBoardY = this.gameBoardY;
+  const pieceColor = this.getPieceColor();
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = gameBoardX + (position.x + col) * this.blockSize;
+        const blockY = gameBoardY + (position.y + row) * this.blockSize;
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+      }
+    }
+  }
+}
+
+drawNextPiecePreview() {
+  const { nextPiece } = this.gameEngine;
+  const { shape } = nextPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const pieceColor = this.getPieceColor();
+
+  const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
+  const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
+
+  const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
+  const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
+  const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
+
+  this.nextPreviewGraphics.clear();
+
+  const smallerBlockSize = blockSize * 0.75;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = nextBoxX + offsetX + col * smallerBlockSize + 10;
+        const blockY = nextBoxY + offsetY + row * smallerBlockSize;
+
+        this.nextPreviewGraphics.fillStyle(pieceColor);
+        this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+        this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
+        this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+      }
+    }
+  }
+}
+```
+
+In the updated `drawCurrentPiece` method:
+
+- We get the `pieceColor` using the `getPieceColor` method, which returns the color based on the current level.
+- We use the `pieceColor` when drawing the current piece on the game board.
+
+In the updated `drawNextPiecePreview` method:
+
+- We get the `pieceColor` using the `getPieceColor` method.
+- We use the `pieceColor` when drawing the next piece preview in the "Next" box.
+
+Additionally, you can remove the `color` property from the `currentPiece` and `nextPiece` objects in the `GameEngine` class since the color is now determined by the `getPieceColor` method in the `GameScene` class.
+
+Here are the updated `createNewPiece` and `placePiece` methods in the `GameEngine` class:
+
+```javascript
+createNewPiece() {
+  const randomIndex = Math.floor(Math.random() * this.shapes.length);
+  const shape = this.shapes[randomIndex];
+  const position = { x: Math.floor(this.board[0].length / 2) - Math.floor(shape[0].length / 2), y: 0 };
+  return { shape, position };
+}
+
+placePiece() {
+  const { shape, position } = this.currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        this.board[position.y + row][position.x + col] = 1;
+      }
+    }
+  }
+
+  this.currentPiece = this.nextPiece;
+  this.nextPiece = this.createNewPiece();
+}
+```
+
+In the updated `createNewPiece` method, we only return the `shape` and `position` properties, without the `color` property.
+
+In the updated `placePiece` method, we set the value of the occupied cells on the board to `1` instead of the color value.
+
+With these changes, the current piece and the next piece preview will have the same color as the level color, and the placed pieces on the board will also have the corresponding level color.
+
+Please update your `GameScene.js` and `GameEngine.js` files with these modifications and test the game. The current piece, next piece preview, and placed pieces should now have the correct color based on the current level.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+Thank you! The only problem that I have now is that when the level changes not only the new pieces have the new color, but also the pieces that are already on the board change their color. I would like to keep the color of the pieces on the board the same and only change the color of the new pieces.
+
+**Assistant:**
+
+I apologize for the confusion. To keep the color of the pieces on the board the same and only change the color of the new pieces, you can modify the `placePiece` method in the `GameEngine` class to store the color of the piece on the board instead of just setting it to `1`. Additionally, you'll need to update the `drawBoard` method in the `GameScene` class to use the stored color when drawing the placed pieces.
+
+Here are the updated methods:
+
+```javascript
+// GameEngine.js
+placePiece() {
+  const { shape, position } = this.currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const pieceColor = this.level; // Store the current level as the color value
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        this.board[position.y + row][position.x + col] = pieceColor;
+      }
+    }
+  }
+
+  this.currentPiece = this.nextPiece;
+  this.nextPiece = this.createNewPiece();
+}
+```
+
+In the updated `placePiece` method in the `GameEngine` class:
+
+- We store the current `level` as the `pieceColor` value.
+- We set the value of the occupied cells on the board to `pieceColor` instead of `1`.
+
+```javascript
+// GameScene.js
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const colorValue = board[row][col];
+      const blockX = this.gameBoardX + col * this.blockSize;
+      const blockY = this.gameBoardY + row * this.blockSize;
+
+      if (colorValue !== 0) {
+        const pieceColor = this.getPieceColorByLevel(colorValue);
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+      } else {
+        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+      }
+    }
+  }
+}
+
+getPieceColorByLevel(level) {
+  const colorIndex = Math.floor(level / 5) % 4;
+
+  const colors = [
+    0xff0000, // Red
+    0x00ff00, // Green
+    0x0000ff, // Blue
+    0xffa500, // Orange
+  ];
+
+  return colors[colorIndex];
+}
+```
+
+In the updated `drawBoard` method in the `GameScene` class:
+
+- We get the `colorValue` from the `board` array for each cell.
+- If the `colorValue` is not `0` (i.e., the cell is occupied), we calculate the `pieceColor` using the new `getPieceColorByLevel` method, passing the `colorValue` as the `level` argument.
+- We use the calculated `pieceColor` when drawing the placed pieces on the board.
+
+The new `getPieceColorByLevel` method is similar to the `getPieceColor` method but takes the `level` as an argument instead of using `this.gameEngine.level`.
+
+With these changes, the color of the pieces on the board will remain the same as when they were placed, while the color of the new pieces will change based on the current level.
+
+Please update your `GameEngine.js` and `GameScene.js` files with these modifications and test the game. The pieces on the board should retain their original colors, and only the new pieces should have the color corresponding to the current level.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
+
+**User:**
+
+Everything seems to work perfectly appart of if I start from level 0 it seems like the elements on the board disappear once hit the bottom. Can you help me with this? It seems like bug that most likely already existed before the changes we made, but I just noticed it now.
+
+**Assistant:**
+
+I apologize for the oversight. It seems like the issue is related to the `placePiece` method in the `GameEngine` class. When starting from level 0, the `pieceColor` is set to `0`, which is the same value used to represent an empty cell on the board. As a result, the placed pieces appear to disappear when they reach the bottom.
+
+To fix this issue, we can modify the `placePiece` method to store a non-zero value for the piece color, even when starting from level 0. Here's the updated `placePiece` method:
+
+```javascript
+// GameEngine.js
+placePiece() {
+  const { shape, position } = this.currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const pieceColor = this.level + 1; // Store the current level plus one as the color value
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        this.board[position.y + row][position.x + col] = pieceColor;
+      }
+    }
+  }
+
+  this.currentPiece = this.nextPiece;
+  this.nextPiece = this.createNewPiece();
+}
+```
+
+In the updated `placePiece` method:
+
+- We store the current `level` plus one as the `pieceColor` value. By adding one to the level, we ensure that the color value is always non-zero, even when starting from level 0.
+
+Additionally, you'll need to update the `getPieceColorByLevel` method in the `GameScene` class to account for the adjusted color value:
+
+```javascript
+// GameScene.js
+getPieceColorByLevel(level) {
+  const adjustedLevel = level - 1;
+  const colorIndex = Math.floor(adjustedLevel / 5) % 4;
+
+  const colors = [
+    0xff0000, // Red
+    0x00ff00, // Green
+    0x0000ff, // Blue
+    0xffa500, // Orange
+  ];
+
+  return colors[colorIndex];
+}
+```
+
+In the updated `getPieceColorByLevel` method:
+
+- We subtract one from the `level` to get the `adjustedLevel`. This adjustment ensures that the color calculation is based on the original level value.
+
+With these changes, the pieces should no longer disappear when starting from level 0. The placed pieces will retain their colors on the board, and the color of the new pieces will change based on the current level.
+
+Please update your `GameEngine.js` and `GameScene.js` files with these modifications and test the game. The issue with the disappearing pieces should be resolved.
+
+Let me know if you have any further questions or if there's anything else you'd like to add to the game!
