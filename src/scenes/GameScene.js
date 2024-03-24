@@ -223,12 +223,11 @@ export default class GameScene extends Phaser.Scene {
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const cell = board[row][col];
+        const color = board[row][col];
         const blockX = this.gameBoardX + col * this.blockSize;
         const blockY = this.gameBoardY + row * this.blockSize;
 
-        if (cell !== 0) {
-          const color = this.getColorForPiece(cell);
+        if (color !== 0) {
           this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
         } else {
           this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
@@ -236,7 +235,6 @@ export default class GameScene extends Phaser.Scene {
       }
     }
   }
-
   getColorForPiece(value) {
     const colors = {
       1: 0xff0000,
@@ -262,47 +260,45 @@ export default class GameScene extends Phaser.Scene {
 
   drawCurrentPiece() {
     const { currentPiece } = this.gameEngine;
-    const { shape, position } = currentPiece;
+    const { shape, color, position } = currentPiece;
     const rows = shape.length;
     const cols = shape[0].length;
     const gameBoardX = this.gameBoardX;
     const gameBoardY = this.gameBoardY;
-    const pieceColor = this.getPieceColor();
-  
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
           const blockX = gameBoardX + (position.x + col) * this.blockSize;
           const blockY = gameBoardY + (position.y + row) * this.blockSize;
-          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
         }
       }
     }
   }
-
   drawNextPiecePreview() {
     const { nextPiece } = this.gameEngine;
-    const { shape } = nextPiece;
+    const { shape, color } = nextPiece;
     const rows = shape.length;
     const cols = shape[0].length;
-  
+
     const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
     const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
-  
+
     const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
     const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
     const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
-  
+
     this.nextPreviewGraphics.clear();
-  
+
     const smallerBlockSize = blockSize * 0.75;
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (shape[row][col]) {
-          const blockX = nextBoxX + offsetX + col * smallerBlockSize +10;
+          const blockX = nextBoxX + offsetX + col * smallerBlockSize + 10;
           const blockY = nextBoxY + offsetY + row * smallerBlockSize;
 
-          this.nextPreviewGraphics.fillStyle(0xff0000);
+          this.nextPreviewGraphics.fillStyle(color);
           this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
           this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
           this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
@@ -310,7 +306,6 @@ export default class GameScene extends Phaser.Scene {
       }
     }
   }
-
   movePieceDown() {
     const { currentPiece } = this.gameEngine;
     currentPiece.position.y++;

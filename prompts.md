@@ -12745,3 +12745,161 @@ create() {
 With these changes, the game should start at the selected level, and the level should increase correctly based on the total lines cleared, without resetting to 0 when a line is cleared.
 
 Please update your `GameEngine.js` and `GameScene.js` files with these changes and test the game to ensure that the level progression works as expected.
+
+**User:**
+
+Thank you! This worked perfectly. When I was testing the game I noticed that if I start on level 9 the piece that is moving has blue color as expected, but it seems flickering, also once it is place on the board it becomes red. Could you help me with this issue? I would imagine that we need to keep the color of each piece the same during the whole game. Probalby on the board we should have integer values for each pieces that can be mapped to the colors. Think what is the best way to fix this. I am not really sure how to do it. 
+
+**Assistant:**
+
+To address the issue of flickering pieces and inconsistent colors when starting at higher levels, we need to ensure that the color of each piece remains consistent throughout the game. Instead of relying on the current level to determine the piece color, we can assign a color to each piece shape and use that color consistently.
+
+Here's how you can modify the `GameEngine.js` and `GameScene.js` files to fix this issue:
+
+1. Update the `GameEngine.js` file:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  constructor() {
+    // ... (existing constructor code)
+    this.colors = [
+      0xff0000, // Red
+      0x00ff00, // Green
+      0x0000ff, // Blue
+      0xffff00, // Yellow
+      0xff00ff, // Magenta
+      0x00ffff, // Cyan
+      0xffa500, // Orange
+    ];
+  }
+
+  // ... (existing methods)
+
+  createNewPiece() {
+    const randomIndex = Math.floor(Math.random() * this.shapes.length);
+    const shape = this.shapes[randomIndex];
+    const color = this.colors[randomIndex];
+    const position = { x: Math.floor(this.board[0].length / 2) - Math.floor(shape[0].length / 2), y: 0 };
+    return { shape, color, position };
+  }
+
+  placePiece() {
+    const { shape, color, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          this.board[position.y + row][position.x + col] = color;
+        }
+      }
+    }
+
+    this.currentPiece = this.nextPiece;
+    this.nextPiece = this.createNewPiece();
+  }
+
+  // ... (existing methods)
+}
+```
+
+In the updated `GameEngine.js` file:
+- Added a new property `colors` to store an array of colors corresponding to each piece shape.
+- Updated the `createNewPiece` method to assign a color to each new piece based on its shape index.
+- Updated the `placePiece` method to store the color value in the `board` array instead of the shape value.
+
+2. Update the `GameScene.js` file:
+
+```javascript
+// GameScene.js
+// ... (existing imports)
+
+export default class GameScene extends Phaser.Scene {
+  // ... (existing constructor and methods)
+
+  drawBoard() {
+    const { board } = this.gameEngine;
+    const rows = board.length;
+    const cols = board[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const color = board[row][col];
+        const blockX = this.gameBoardX + col * this.blockSize;
+        const blockY = this.gameBoardY + row * this.blockSize;
+
+        if (color !== 0) {
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+        } else {
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  drawCurrentPiece() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, color, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const gameBoardX = this.gameBoardX;
+    const gameBoardY = this.gameBoardY;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, color).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  drawNextPiecePreview() {
+    const { nextPiece } = this.gameEngine;
+    const { shape, color } = nextPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
+    const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
+
+    const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
+    const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
+    const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
+
+    this.nextPreviewGraphics.clear();
+
+    const smallerBlockSize = blockSize * 0.75;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = nextBoxX + offsetX + col * smallerBlockSize + 10;
+          const blockY = nextBoxY + offsetY + row * smallerBlockSize;
+
+          this.nextPreviewGraphics.fillStyle(color);
+          this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+          this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
+          this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
+        }
+      }
+    }
+  }
+
+  // ... (existing methods)
+}
+```
+
+In the updated `GameScene.js` file:
+- Updated the `drawBoard` method to use the color value stored in the `board` array to draw each block.
+- Updated the `drawCurrentPiece` method to use the color assigned to the current piece.
+- Updated the `drawNextPiecePreview` method to use the color assigned to the next piece.
+
+With these changes, each piece shape will have a consistent color throughout the game, regardless of the starting level. The piece color will remain the same when it's moving, placed on the board, and previewed in the "Next" box.
+
+Please update your `GameEngine.js` and `GameScene.js` files with these changes and test the game to ensure that the pieces have consistent colors and do not flicker or change color when placed on the board.
+
+**User:**
