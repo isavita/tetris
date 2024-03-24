@@ -123,29 +123,10 @@ export default class GameEngine {
     const rotatedShape = this.getRotatedShape(clockwise);
     const { x, y } = this.currentPiece.position;
   
-    // Check if the rotated shape fits within the board boundaries
-    const shapeFitsBoard = rotatedShape.every((row, rowIndex) =>
-      row.every((cell, colIndex) => {
-        const newX = x + colIndex;
-        const newY = y + rowIndex;
-        return !cell || (newX >= 0 && newX < this.board[0].length && newY < this.board.length);
-      })
-    );
-  
-    // Check if the rotated shape collides with any existing pieces on the board
-    const collisionDetected = rotatedShape.some((row, rowIndex) =>
-      row.some((cell, colIndex) => {
-        const newX = x + colIndex;
-        const newY = y + rowIndex;
-        return cell && newY >= 0 && this.board[newY][newX];
-      })
-    );
-  
-    if (shapeFitsBoard && !collisionDetected) {
+    if (!this.checkCollisionRotation(rotatedShape, x, y)) {
       this.currentPiece.shape = rotatedShape;
     }
   }
-
   getRotatedShape(clockwise) {
     const shape = this.currentPiece.shape;
     const rows = shape.length;

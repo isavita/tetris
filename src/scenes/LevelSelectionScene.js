@@ -87,7 +87,7 @@ export default class LevelSelectionScene extends Phaser.Scene {
 
   update() {
     // Handle level selection navigation
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
+    if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
       this.selectedLevel--;
       this.updateSelectedLevel();
     } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {

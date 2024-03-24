@@ -236,6 +236,36 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  drawNextPiecePreview() {
+    const { nextPiece } = this.gameEngine;
+    const { shape } = nextPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const pieceColor = this.getPieceColor();
+  
+    const nextBoxX = this.nextBoxX + 10;
+    const nextBoxY = this.nextBoxY + 10;
+  
+    const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
+    const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
+    const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
+  
+    this.nextPreviewGraphics.clear();
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = nextBoxX + offsetX + col * blockSize;
+          const blockY = nextBoxY + offsetY + row * blockSize;
+          this.nextPreviewGraphics.fillStyle(pieceColor);
+          this.nextPreviewGraphics.fillRect(blockX, blockY, blockSize, blockSize);
+          this.nextPreviewGraphics.lineStyle(1, this.boarderColor, 0.8);
+          this.nextPreviewGraphics.strokeRect(blockX, blockY, blockSize, blockSize);
+        }
+      }
+    }
+  }
+
   getPieceColorByLevel(level) {
     const adjustedLevel = level - 1;
     const colorIndex = Math.floor(adjustedLevel / 5) % 4;
@@ -273,57 +303,24 @@ export default class GameScene extends Phaser.Scene {
     return colors[colorIndex];
   }
 
-drawCurrentPiece() {
-  const { currentPiece } = this.gameEngine;
-  const { shape, position } = currentPiece;
-  const rows = shape.length;
-  const cols = shape[0].length;
-  const gameBoardX = this.gameBoardX;
-  const gameBoardY = this.gameBoardY;
-  const pieceColor = this.getPieceColor();
-
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      if (shape[row][col]) {
-        const blockX = gameBoardX + (position.x + col) * this.blockSize;
-        const blockY = gameBoardY + (position.y + row) * this.blockSize;
-        this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+  drawCurrentPiece() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const pieceColor = this.getPieceColor();
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = this.gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = this.gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+        }
       }
     }
   }
-}
 
-drawNextPiecePreview() {
-  const { nextPiece } = this.gameEngine;
-  const { shape } = nextPiece;
-  const rows = shape.length;
-  const cols = shape[0].length;
-  const pieceColor = this.getPieceColor();
-
-  const nextBoxX = this.gameBoardX + 10 * this.blockSize + 20;
-  const nextBoxY = this.gameBoardY + this.nextBoxHeight + 35;
-
-  const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
-  const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
-  const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
-
-  this.nextPreviewGraphics.clear();
-
-  const smallerBlockSize = blockSize * 0.75;
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      if (shape[row][col]) {
-        const blockX = nextBoxX + offsetX + col * smallerBlockSize + 10;
-        const blockY = nextBoxY + offsetY + row * smallerBlockSize;
-
-        this.nextPreviewGraphics.fillStyle(pieceColor);
-        this.nextPreviewGraphics.fillRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
-        this.nextPreviewGraphics.lineStyle(1, this.borderColor, 0.8);
-        this.nextPreviewGraphics.strokeRect(blockX, blockY, smallerBlockSize, smallerBlockSize);
-      }
-    }
-  }
-}
   movePieceDown() {
     const { currentPiece } = this.gameEngine;
     currentPiece.position.y++;
