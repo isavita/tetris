@@ -49,10 +49,10 @@ export default class LevelSelectionScene extends Phaser.Scene {
     }
 
     // Create the 'LEVEL' label
-    const labelWidth = (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) * 0.7; // Adjust the width as needed
+    const labelWidth = (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) * 0.7;
     const labelHeight = 60;
     const labelX = offsetX + (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) / 2 - labelWidth / 2 - 20;
-    const labelY = offsetY - labelHeight - 40; // Adjust the spacing between the label and the grid
+    const labelY = offsetY - labelHeight - 40;
 
     const labelBox = this.add.rectangle(labelX, labelY, labelWidth, labelHeight, 0xA52A2A)
       .setStrokeStyle(4, 0x8B0000, 1, 1) // Darker shade on top and left sides
@@ -61,6 +61,15 @@ export default class LevelSelectionScene extends Phaser.Scene {
     const labelText = this.add.text(labelX + labelWidth / 2, labelY + labelHeight / 2, 'LEVEL', {
       fontFamily: 'yoster',
       fontSize: '32px',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+
+    // Create the "Press SPACE to start" text
+    const startTextX = offsetX + (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) / 2 - 20;
+    const startTextY = offsetY + (cellHeight * 2 + cellSpacing) + 40;
+    const startText = this.add.text(startTextX, startTextY, 'Press SPACE to start', {
+      fontFamily: 'yoster',
+      fontSize: '24px',
       fill: '#ffffff'
     }).setOrigin(0.5);
 
