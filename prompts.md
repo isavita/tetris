@@ -12168,3 +12168,580 @@ export default class GameScene extends Phaser.Scene {
 }
 ```
 I would like to continue with integrating selectedLevel into the GameScene. It should affect the game speed and scoring system. Also, I would like once the game is over, the player to get information how can restart the game. The game should be restarted to the LevelSelectionScene.
+
+**Assistant:**
+
+To integrate the `selectedLevel` into the `GameScene`, affect the game speed and scoring system, and provide information on how to restart the game after it's over, you can make the following changes to the `GameScene.js` file:
+
+1. Update the `constructor` to receive the `selectedLevel`:
+```javascript
+constructor() {
+  super('GameScene');
+  this.selectedLevel = 0;
+  // ... (existing constructor code)
+}
+```
+
+2. Update the `init` method to receive the `selectedLevel` from the `LevelSelectionScene`:
+```javascript
+init(data) {
+  this.selectedLevel = data.level;
+}
+```
+
+3. Update the `create` method to set the starting level of the `GameEngine` based on the `selectedLevel`:
+```javascript
+create() {
+  // ... (existing create code)
+
+  // Set the starting level based on the selected level
+  this.gameEngine.level = this.selectedLevel;
+
+  // ... (existing create code)
+}
+```
+
+4. Update the `displayGameOverMessage` method to show instructions on how to restart the game:
+```javascript
+displayGameOverMessage() {
+  const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+  const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+
+  this.gameOverMessage = this.add.text(
+    gameBoardCenterX,
+    gameBoardCenterY,
+    'Game Over\nPress any key to restart',
+    {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      fill: '#ffffff',
+      align: 'center',
+    }
+  ).setOrigin(0.5);
+}
+```
+
+5. Update the `restartGame` method to navigate back to the `LevelSelectionScene`:
+```javascript
+restartGame() {
+  this.scene.start('LevelSelectionScene');
+}
+```
+
+With these changes:
+
+- The `selectedLevel` from the `LevelSelectionScene` will be passed to the `GameScene` through the `init` method.
+- The starting level of the `GameEngine` will be set based on the `selectedLevel`, affecting the game speed and scoring system.
+- When the game is over, the `displayGameOverMessage` method will show instructions on how to restart the game.
+- Pressing any key after the game is over will navigate back to the `LevelSelectionScene`, allowing the player to select a level and start a new game.
+
+Here's the updated `GameScene.js` file with the changes:
+
+```javascript
+// GameScene.js
+import GameEngine from "./GameEngine.js";
+
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+    this.selectedLevel = 0;
+    this.gameEngine = new GameEngine();
+    this.frames = 0;
+    this.blockSize = 15;
+    this.cursors = null;
+    this.dasDelay = 16;
+    this.dasInterval = 6;
+    this.dasTimer = 0;
+    this.dasDirection = null;
+    this.isFastFalling = false;
+    this.fastFallInterval = 2;
+    this.isPaused = false;
+    this.borderColor = 0xffffff;
+  }
+
+  init(data) {
+    this.selectedLevel = data.level;
+  }
+
+  create() {
+    // ... (existing create code)
+
+    // Set the starting level based on the selected level
+    this.gameEngine.level = this.selectedLevel;
+
+    // ... (existing create code)
+  }
+
+  // ... (existing methods)
+
+  displayGameOverMessage() {
+    const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+    const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+
+    this.gameOverMessage = this.add.text(
+      gameBoardCenterX,
+      gameBoardCenterY,
+      'Game Over\nPress any key to restart',
+      {
+        fontFamily: 'Arial',
+        fontSize: '18px',
+        fill: '#ffffff',
+        align: 'center',
+      }
+    ).setOrigin(0.5);
+  }
+
+  restartGame() {
+    this.scene.start('LevelSelectionScene');
+  }
+}
+```
+
+Make sure to update the `LevelSelectionScene` to pass the `selectedLevel` to the `GameScene` when starting the game:
+
+```javascript
+// LevelSelectionScene.js
+startGame() {
+  // Start the GameScene with the selected level
+  this.scene.start('GameScene', { level: this.selectedLevel });
+}
+```
+
+With these changes, the `selectedLevel` will be integrated into the `GameScene`, affecting the game speed and scoring system. The player will also receive instructions on how to restart the game after it's over, and the game will navigate back to the `LevelSelectionScene` for level selection.
+
+**User:**
+
+Thank you! I see one bug with the game. Once one lines is cleared I see in the console the following message "Level increased to 0    GameEngine.js:317" and the game is reset to level 0.
+
+Here is the code of GameEngine.js:
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  constructor() {
+    this.board = this.createEmptyBoard();
+    this.score = 0;
+    this.level = 1;
+    this.linesCleared = 0;
+    this.softDropScore = 0;
+    this.shapes = [
+      // I-piece
+      [
+        [1, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+      // J-piece
+      [
+        [1, 0, 0],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      // L-piece
+      [
+        [0, 0, 1],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      // O-piece
+      [
+        [1, 1],
+        [1, 1],
+      ],
+      // S-piece
+      [
+        [0, 1, 1],
+        [1, 1, 0],
+        [0, 0, 0],
+      ],
+      // T-piece
+      [
+        [0, 1, 0],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      // Z-piece
+      [
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 0],
+      ],
+    ];
+    this.nextPiece = this.createNewPiece();
+    this.currentPiece = this.createNewPiece();
+  }
+
+  createEmptyBoard() {
+    const rows = 20;
+    const columns = 10;
+    return Array(rows).fill(null).map(() => Array(columns).fill(0));
+  }
+
+  movePiece(direction) {
+    const { x, y } = this.currentPiece.position;
+    const cols = this.currentPiece.shape[0].length;
+    const rows = this.currentPiece.shape.length;
+
+    switch (direction) {
+      case 'left':
+        if (x > 0 && !this.checkCollision(x - 1, y)) {
+          this.currentPiece.position.x = x - 1;
+        }
+        break;
+      case 'right':
+        if (x + cols < this.board[0].length && !this.checkCollision(x + 1, y)) {
+          this.currentPiece.position.x = x + 1;
+        }
+        break;
+      case 'down':
+        if (y + rows < this.board.length && !this.checkCollision(x, y + 1)) {
+          this.currentPiece.position.y = y + 1;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  checkCollision(x, y) {
+    const shape = this.currentPiece.shape;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col] && this.board[y + row][x + col]) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  rotatePiece(clockwise = true) {
+    const rotatedShape = this.getRotatedShape(clockwise);
+    const { x, y } = this.currentPiece.position;
+  
+    // Check if the rotated shape fits within the board boundaries
+    const shapeFitsBoard = rotatedShape.every((row, rowIndex) =>
+      row.every((cell, colIndex) => {
+        const newX = x + colIndex;
+        const newY = y + rowIndex;
+        return !cell || (newX >= 0 && newX < this.board[0].length && newY < this.board.length);
+      })
+    );
+  
+    // Check if the rotated shape collides with any existing pieces on the board
+    const collisionDetected = rotatedShape.some((row, rowIndex) =>
+      row.some((cell, colIndex) => {
+        const newX = x + colIndex;
+        const newY = y + rowIndex;
+        return cell && newY >= 0 && this.board[newY][newX];
+      })
+    );
+  
+    if (shapeFitsBoard && !collisionDetected) {
+      this.currentPiece.shape = rotatedShape;
+    }
+  }
+
+  getRotatedShape(clockwise) {
+    const shape = this.currentPiece.shape;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const rotatedShape = [];
+
+    if (clockwise) {
+      for (let col = 0; col < cols; col++) {
+        const newRow = [];
+        for (let row = rows - 1; row >= 0; row--) {
+          newRow.push(shape[row][col]);
+        }
+        rotatedShape.push(newRow);
+      }
+    } else {
+      for (let col = cols - 1; col >= 0; col--) {
+        const newRow = [];
+        for (let row = rows - 1; row >= 0; row--) {
+          newRow.push(shape[row][col]);
+        }
+        rotatedShape.unshift(newRow);
+      }
+    }
+
+    return rotatedShape;
+  }
+
+  checkCollisionRotation(rotatedShape, x, y) {
+    const rows = rotatedShape.length;
+    const cols = rotatedShape[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (rotatedShape[row][col]) {
+          const newX = x + col;
+          const newY = y + row;
+  
+          if (
+            newX < 0 ||
+            newX >= this.board[0].length ||
+            newY >= this.board.length ||
+            (newY >= 0 && newX >= 0 && this.board[newY][newX])
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+  
+    return false;
+  }
+
+  getFramesPerGridCell() {
+    if (this.level <= 8) {
+      return 48 - this.level * 5;
+    } else if (this.level <= 17) {
+      return 6 - Math.floor((this.level - 8) / 3);
+    } else if (this.level <= 28) {
+      return 2;
+    } else {
+      return 1;
+    }
+  }
+
+  canMovePieceDown() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const newRow = position.y + row + 1;
+          if (newRow >= this.board.length || this.board[newRow][position.x + col]) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  canMovePieceLeft() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const newCol = position.x + col - 1;
+          if (newCol < 0 || this.board[position.y + row][newCol]) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  canMovePieceRight() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const newCol = position.x + col + 1;
+          if (newCol >= this.board[0].length || this.board[position.y + row][newCol]) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  movePieceLeft() {
+    this.currentPiece.position.x--;
+  }
+
+  movePieceRight() {
+    this.currentPiece.position.x++;
+  }
+
+  createNewPiece() {
+    const randomIndex = Math.floor(Math.random() * this.shapes.length);
+    const shape = this.shapes[randomIndex];
+    const position = { x: Math.floor(this.board[0].length / 2) - Math.floor(shape[0].length / 2), y: 0 };
+    return { shape, position };
+  }
+
+  placePiece() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          this.board[position.y + row][position.x + col] = shape[row][col];
+        }
+      }
+    }
+
+    this.currentPiece = this.nextPiece;
+    this.nextPiece = this.createNewPiece();
+  }
+
+  clearLines() {
+    let linesCleared = 0;
+
+    for (let row = this.board.length - 1; row >= 0; row--) {
+      if (this.board[row].every(cell => cell !== 0)) {
+        this.board.splice(row, 1);
+        this.board.unshift(Array(this.board[0].length).fill(0));
+        linesCleared++;
+        row++; // Re-check the current row after shifting the lines down
+      }
+    }
+
+    if (linesCleared > 0) {
+      this.updateScore(linesCleared);
+      this.linesCleared += linesCleared;
+      this.updateLevel();
+    }
+  }
+
+  updateScore(linesCleared) {
+    const basePoints = 40;
+    const linePoints = [0, 40, 100, 300, 1200];
+    const points = basePoints + linePoints[linesCleared] * this.level;
+    this.score += points;
+    this.score += this.softDropScore;
+    this.softDropScore = 0;
+  }
+
+  updateLevel() {
+    const prevLevel = this.level;
+    this.level = Math.floor(this.linesCleared / 10);
+    if (this.level !== prevLevel) {
+      console.log(`Level increased to ${this.level}`);
+    }
+  }
+
+  softDrop() {
+    if (this.canMovePieceDown()) {
+      this.currentPiece.position.y++;
+      this.softDropScore++;
+    }
+  }
+
+  isGameOver() {
+    const { shape, position } = this.currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col] && this.board[position.y + row][position.x + col]) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+}
+```
+Could you fix this bug? Probaly initialize the level using init method or something similar. 
+
+**Assistant:**
+
+It looks like the issue is with the `updateLevel` method in the `GameEngine` class. The current implementation calculates the level based on the number of lines cleared, which can cause the level to reset to 0 when the game starts from a level other than 1.
+
+To fix this, you can update the `updateLevel` method to calculate the level based on the total lines cleared, including the lines cleared from the starting level.
+
+Here's the updated `GameEngine.js` file with the fix:
+
+```javascript
+// GameEngine.js
+export default class GameEngine {
+  constructor() {
+    // ... (existing constructor code)
+    this.startingLevel = 1;
+    this.totalLinesCleared = 0;
+  }
+
+  // ... (existing methods)
+
+  init(startingLevel) {
+    this.startingLevel = startingLevel;
+    this.level = startingLevel;
+    this.totalLinesCleared = (startingLevel - 1) * 10;
+  }
+
+  // ... (existing methods)
+
+  clearLines() {
+    let linesCleared = 0;
+
+    for (let row = this.board.length - 1; row >= 0; row--) {
+      if (this.board[row].every(cell => cell !== 0)) {
+        this.board.splice(row, 1);
+        this.board.unshift(Array(this.board[0].length).fill(0));
+        linesCleared++;
+        row++; // Re-check the current row after shifting the lines down
+      }
+    }
+
+    if (linesCleared > 0) {
+      this.updateScore(linesCleared);
+      this.linesCleared += linesCleared;
+      this.totalLinesCleared += linesCleared;
+      this.updateLevel();
+    }
+  }
+
+  updateLevel() {
+    const prevLevel = this.level;
+    this.level = Math.floor(this.totalLinesCleared / 10) + 1;
+    if (this.level !== prevLevel) {
+      console.log(`Level increased to ${this.level}`);
+    }
+  }
+
+  // ... (existing methods)
+}
+```
+
+The changes made:
+
+1. Added a new property `startingLevel` to store the starting level selected by the player.
+2. Added a new property `totalLinesCleared` to keep track of the total lines cleared, including the lines cleared from the starting level.
+3. Updated the `init` method to receive the `startingLevel` and initialize the `level`, `startingLevel`, and `totalLinesCleared` properties.
+4. Updated the `clearLines` method to increment the `totalLinesCleared` property when lines are cleared.
+5. Updated the `updateLevel` method to calculate the level based on the `totalLinesCleared` property.
+
+Now, in the `GameScene` class, you need to call the `init` method of the `GameEngine` to pass the starting level:
+
+```javascript
+// GameScene.js
+create() {
+  // ... (existing create code)
+
+  // Initialize the GameEngine with the selected level
+  this.gameEngine.init(this.selectedLevel);
+
+  // ... (existing create code)
+}
+```
+
+With these changes, the game should start at the selected level, and the level should increase correctly based on the total lines cleared, without resetting to 0 when a line is cleared.
+
+Please update your `GameEngine.js` and `GameScene.js` files with these changes and test the game to ensure that the level progression works as expected.

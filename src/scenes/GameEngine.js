@@ -5,6 +5,8 @@ export default class GameEngine {
     this.score = 0;
     this.level = 1;
     this.linesCleared = 0;
+    this.startingLevel = 1;
+    this.totalLinesCleared = 0;
     this.softDropScore = 0;
     this.shapes = [
       // I-piece
@@ -52,6 +54,12 @@ export default class GameEngine {
     ];
     this.nextPiece = this.createNewPiece();
     this.currentPiece = this.createNewPiece();
+  }
+
+  init(startingLevel) {
+    this.startingLevel = startingLevel;
+    this.level = startingLevel;
+    this.totalLinesCleared = (startingLevel - 1) * 10;
   }
 
   createEmptyBoard() {
@@ -297,6 +305,7 @@ export default class GameEngine {
     if (linesCleared > 0) {
       this.updateScore(linesCleared);
       this.linesCleared += linesCleared;
+      this.totalLinesCleared += linesCleared;
       this.updateLevel();
     }
   }
@@ -312,7 +321,7 @@ export default class GameEngine {
 
   updateLevel() {
     const prevLevel = this.level;
-    this.level = Math.floor(this.linesCleared / 10);
+    this.level = Math.floor(this.totalLinesCleared / 10) + 1;
     if (this.level !== prevLevel) {
       console.log(`Level increased to ${this.level}`);
     }

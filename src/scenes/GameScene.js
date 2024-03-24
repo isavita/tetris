@@ -5,6 +5,7 @@ export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
     this.gameEngine = new GameEngine();
+    this.selectedLevel = 0;
     this.frames = 0;
     this.blockSize = 15;
     this.cursors = null;
@@ -18,11 +19,18 @@ export default class GameScene extends Phaser.Scene {
     this.boarderColor = 0xffffff;
   }
 
+  init(data) {
+    this.selectedLevel = data.level;
+  }
+
   create() {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
     this.input.keyboard.on('keydown-SHIFT', this.rotatePieceCounterclockwise, this);
     this.input.keyboard.on('keydown-P', this.togglePause, this);
+
+    this.gameEngine.init(this.selectedLevel);
+
     const { width, height } = this.cameras.main;
     const boardWidth = 10;
     const boardHeight = 20;
@@ -409,21 +417,22 @@ export default class GameScene extends Phaser.Scene {
   displayGameOverMessage() {
     const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
     const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
-  
+
     this.gameOverMessage = this.add.text(
       gameBoardCenterX,
       gameBoardCenterY,
-      'Game Over',
+      'Game Over\nPress any key to restart',
       {
         fontFamily: 'Arial',
         fontSize: '18px',
         fill: '#ffffff',
+        align: 'center',
       }
     ).setOrigin(0.5);
   }
 
   restartGame() {
     this.gameEngine = new GameEngine();
-    this.scene.restart();
+    this.scene.start('LevelSelectionScene');
   }
 }
