@@ -2,6 +2,7 @@
 export default class LevelSelectionScene extends Phaser.Scene {
   constructor() {
     super('LevelSelectionScene');
+    this.fontsLoaded = false;
   }
 
   preload() {
@@ -15,12 +16,16 @@ export default class LevelSelectionScene extends Phaser.Scene {
         urls: ['assets/fonts/fonts.css']
       },
       active: () => {
-        this.create();
+        this.fontsLoaded = true;
       }
     });
   }
 
   create() {
+    if (!this.fontsLoaded) {
+      this.time.delayedCall(100, this.create, [], this);
+      return;
+    }
     // Add the background image
     this.add.image(0, 0, 'background').setOrigin(0);
 

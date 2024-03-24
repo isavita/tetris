@@ -1,6 +1,8 @@
+// MenuScene.js
 export default class MenuScene extends Phaser.Scene {
   constructor() {
     super('MenuScene');
+    this.fontsLoaded = false;
   }
 
   preload() {
@@ -13,12 +15,17 @@ export default class MenuScene extends Phaser.Scene {
         urls: ['assets/fonts/fonts.css']
       },
       active: () => {
-        this.create();
+        this.fontsLoaded = true;
       }
     });
   }
 
   create() {
+    if (!this.fontsLoaded) {
+      this.time.delayedCall(100, this.create, [], this);
+      return;
+    }
+    
     const backgroundImage = this.add.image(0, 0, 'menuBackground').setOrigin(0);
     const scaleX = this.cameras.main.width / backgroundImage.width;
     const scaleY = this.cameras.main.height / backgroundImage.height;

@@ -184,7 +184,6 @@ export default class GameScene extends Phaser.Scene {
         this.drawNextPiecePreview();
         if (this.gameEngine.isGameOver()) {
           this.displayGameOverMessage();
-          this.input.keyboard.once('keydown', this.restartGame, this);
         }
         this.isFastFalling = false;
       }
@@ -412,11 +411,11 @@ export default class GameScene extends Phaser.Scene {
   displayGameOverMessage() {
     const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
     const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
-
+  
     this.gameOverMessage = this.add.text(
       gameBoardCenterX,
       gameBoardCenterY,
-      'Game Over\nPress any key to restart',
+      'Game Over\nPress SPACE to restart',
       {
         fontFamily: 'Arial',
         fontSize: '18px',
@@ -424,8 +423,10 @@ export default class GameScene extends Phaser.Scene {
         align: 'center',
       }
     ).setOrigin(0.5);
+  
+    this.input.keyboard.once('keydown-SPACE', this.restartGame, this);
   }
-
+  
   restartGame() {
     this.gameEngine = new GameEngine();
     this.scene.start('LevelSelectionScene');
