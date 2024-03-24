@@ -7,3 +7,10 @@
     font-family: 'ThugLife';
     src: url('ThugLifeTTF.ttf') format('truetype');
 }
+
+@font-face {
+    font-family: 'yoster';
+    src: url('yoster.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}

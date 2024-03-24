@@ -10687,3 +10687,979 @@ Please update your code with these modifications and test the game to ensure tha
 If you have any further questions or if there's anything else you'd like to discuss, please let me know!
 
 **User:**
+
+Thank you! Everything is working as expected now.
+I would like to continue with adding a new scene before the game scene. This scene will be for the user to pick the level from which the game will start and a music theme. The user should be able to pick the level from 1 to 30 and the music theme from 1 to 3 and off option if the user doesn't want music. The user should be able to navigate between the options using the arrow keys and select the option using the space key. The scene should have background image. Could you help me with this?
+
+**Assistant:**
+
+Certainly! Let's create a new scene called `LevelSelectionScene` that allows the user to choose the starting level and music theme before starting the game. Here's how you can implement it:
+
+First, create a new file called `LevelSelectionScene.js` in the same directory as your other scene files. Add the following code to the file:
+
+```javascript
+// LevelSelectionScene.js
+export default class LevelSelectionScene extends Phaser.Scene {
+  constructor() {
+    super('LevelSelectionScene');
+  }
+
+  preload() {
+    // Load the background image
+    this.load.image('background', 'path/to/your/background-image.png');
+  }
+
+  create() {
+    // Add the background image
+    this.add.image(0, 0, 'background').setOrigin(0);
+
+    // Add the level selection text
+    this.add.text(400, 200, 'Select Starting Level:', { fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
+    this.levelText = this.add.text(400, 250, '1', { fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5);
+
+    // Add the music theme selection text
+    this.add.text(400, 350, 'Select Music Theme:', { fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
+    this.musicText = this.add.text(400, 400, '1', { fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5);
+
+    // Add the "Off" option for music
+    this.offText = this.add.text(400, 450, 'Off', { fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5);
+
+    // Create variables to store the selected level and music theme
+    this.selectedLevel = 1;
+    this.selectedMusicTheme = 1;
+
+    // Add keyboard input listeners
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.startGame, this);
+  }
+
+  update() {
+    // Handle level selection
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 1) {
+      this.selectedLevel--;
+      this.levelText.setText(this.selectedLevel);
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 30) {
+      this.selectedLevel++;
+      this.levelText.setText(this.selectedLevel);
+    }
+
+    // Handle music theme selection
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedMusicTheme > 0) {
+      this.selectedMusicTheme--;
+      this.updateMusicThemeText();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedMusicTheme < 3) {
+      this.selectedMusicTheme++;
+      this.updateMusicThemeText();
+    }
+  }
+
+  updateMusicThemeText() {
+    if (this.selectedMusicTheme === 0) {
+      this.musicText.setText('Off');
+    } else {
+      this.musicText.setText(this.selectedMusicTheme);
+    }
+  }
+
+  startGame() {
+    // Pass the selected level and music theme to the GameScene
+    this.scene.start('GameScene', { level: this.selectedLevel, musicTheme: this.selectedMusicTheme });
+  }
+}
+```
+
+In this `LevelSelectionScene`:
+
+- We preload the background image in the `preload` method. Replace `'path/to/your/background-image.png'` with the actual path to your background image file.
+- In the `create` method, we add the background image, level selection text, music theme selection text, and the "Off" option for music.
+- We create variables `selectedLevel` and `selectedMusicTheme` to store the user's selections.
+- We add keyboard input listeners for the arrow keys and the space key.
+- In the `update` method, we handle the level and music theme selection based on the user's input.
+- The `updateMusicThemeText` method updates the displayed music theme text based on the selected value.
+- The `startGame` method is called when the user presses the space key. It starts the `GameScene` and passes the selected level and music theme as parameters.
+
+Next, update your `GameScene.js` file to receive the selected level and music theme:
+
+```javascript
+// GameScene.js
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+  }
+
+  init(data) {
+    this.startingLevel = data.level;
+    this.musicTheme = data.musicTheme;
+  }
+
+  create() {
+    // Set the starting level in the GameEngine
+    this.gameEngine.level = this.startingLevel;
+
+    // ... (existing code)
+  }
+
+  // ... (existing code)
+}
+```
+
+In the updated `GameScene`:
+
+- We add an `init` method to receive the selected level and music theme from the `LevelSelectionScene`.
+- In the `create` method, we set the starting level in the `GameEngine` using `this.gameEngine.level = this.startingLevel;`.
+- You can use the `musicTheme` value to play the corresponding music track or handle the "Off" option accordingly.
+
+Finally, update your game configuration in the `game.js` file to include the `LevelSelectionScene`:
+
+```javascript
+// game.js
+import LevelSelectionScene from './scenes/LevelSelectionScene.js';
+import GameScene from './scenes/GameScene.js';
+
+const config = {
+  // ... (existing configuration)
+  scene: [LevelSelectionScene, GameScene],
+};
+
+const game = new Phaser.Game(config);
+```
+
+With these changes, when the game starts, it will first display the `LevelSelectionScene` where the user can choose the starting level and music theme using the arrow keys and select the options using the space key. After making the selections, pressing the space key will start the `GameScene` with the chosen level and music theme.
+
+Make sure to replace `'path/to/your/background-image.png'` with the actual path to your desired background image file.
+
+Let me know if you have any further questions or if you need assistance with anything else!
+
+**User:**
+
+Thank you! There a few problems. I want the user to be able to navigate between the options using the arrow keys and select the option using the space key. The same for the music theme. The scene should have background image. Once I go to the GameScene at first it seems everything is okay, but then when I complete a line the game seems to restart from the beginning. If I start of hire level the element have the appropriate color when they are the current piece but once the piece is not anymore the current is drawen as red always. Could you fix these issues? Probably the first ones that are related to the LevelSelectionScene are easier to fix.
+
+
+Apologies for the confusion. Let's address each issue one by one.
+
+First, let's update the `LevelSelectionScene` to allow navigation between options using arrow keys and selection using the space key.
+
+Update the `update` method in `LevelSelectionScene.js`:
+
+```javascript
+update() {
+  // Handle level selection
+  if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel > 1) {
+    this.selectedLevel--;
+    this.levelText.setText(this.selectedLevel);
+  } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel < 30) {
+    this.selectedLevel++;
+    this.levelText.setText(this.selectedLevel);
+  }
+
+  // Handle music theme selection
+  if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedMusicTheme > 0) {
+    this.selectedMusicTheme--;
+    this.updateMusicThemeText();
+  } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedMusicTheme < 3) {
+    this.selectedMusicTheme++;
+    this.updateMusicThemeText();
+  }
+}
+```
+
+In the updated `update` method:
+- We use the up and down arrow keys to navigate the level selection.
+- We use the left and right arrow keys to navigate the music theme selection.
+
+Next, let's fix the issue with the game restarting from the beginning when completing a line.
+
+Update the `restartGame` method in `GameScene.js`:
+
+```javascript
+restartGame() {
+  this.gameEngine = new GameEngine();
+  this.gameEngine.level = this.startingLevel; // Set the starting level when restarting
+  this.scene.restart();
+}
+```
+
+In the updated `restartGame` method:
+- After creating a new instance of the `GameEngine`, we set the `level` property to `this.startingLevel` to ensure that the game restarts from the selected starting level.
+
+Now, let's address the issue with the piece colors not being retained after the piece is no longer the current piece.
+
+Update the `getColorForPiece` method in `GameScene.js`:
+
+```javascript
+getColorForPiece(value) {
+  const colors = {
+    1: this.getPieceColor(),
+    2: this.getPieceColor(),
+    3: this.getPieceColor(),
+    // Add more colors for different piece types
+  };
+
+  return colors[value] || 0xffffff;
+}
+```
+
+In the updated `getColorForPiece` method:
+- We use the `getPieceColor` method to determine the color based on the current level for all piece types.
+- This ensures that the placed pieces retain the color corresponding to the level at which they were placed.
+
+Finally, make sure you have set the background image for the `LevelSelectionScene`. Update the `preload` method in `LevelSelectionScene.js` with the correct path to your background image file:
+
+```javascript
+preload() {
+  // Load the background image
+  this.load.image('background', 'path/to/your/background-image.png');
+}
+```
+
+Replace `'path/to/your/background-image.png'` with the actual path to your desired background image file.
+
+With these changes:
+- The user can navigate the options using arrow keys and select using the space key in the `LevelSelectionScene`.
+- The game will restart from the selected starting level when completing a line.
+- The placed pieces will retain the color corresponding to the level at which they were placed.
+- The `LevelSelectionScene` will have the specified background image.
+
+Please update your code with these modifications and test the game to ensure that the issues are resolved.
+
+Let me know if you have any further questions or if you need assistance with anything else!
+
+**User:**
+
+Okay let's start with the LevelSelectionScene. I already reverted the changes in the GameScene.js file. I will like to do only the starting level selection and to not add any logic for the music theme yet. Could you do this for me? You should follow the instructions and don't add some extra cord apart of the changes in the LevelSelectionScene.js file. At first we should be ignoring the level selection in the GameScene.js file. I already have added LevelSelectionScene.js file to the game.js and change the logic from the 'MenuScene' to go to 'LevelSelectionScene'.
+
+I will like the 'LeveledSelectionScene' to look like this:
+![LevelSelectionScene](prompts_assets/levelSelectionIteration1.png)
+The level numbers from 0 to 9 are displayed within individual cells of a grid, which likely represents the levels that can be selected by the player. Each cell is surrounded by a green border, and the cells are arranged in two rows; the top row has the numbers 0 to 4 and the bottom row has 5 to 9. The currently selected level, which seems to be level 8, is highlighted by an orange border surrounding its cell.
+
+The structure suggests a simple navigation system, where a player can move a cursor or selector to highlight their desired level before starting the game. The green borders maintain a consistent visual theme, while the orange border stands out to clearly indicate the player's current selection. In operation, players would likely use the game controller's directional buttons to move the highlight to their chosen level, and then press a confirm button to start the game at the selected level.
+
+
+**Assistant:**
+
+Certainly! Let's focus on implementing the level selection functionality in the `LevelSelectionScene` without adding the music theme selection for now. We'll also ignore the level selection in the `GameScene` for the time being.
+
+Here's the updated `LevelSelectionScene.js` file:
+
+```javascript
+// LevelSelectionScene.js
+export default class LevelSelectionScene extends Phaser.Scene {
+  constructor() {
+    super('LevelSelectionScene');
+  }
+
+  preload() {
+    // Load the background image
+    this.load.image('background', 'path/to/your/background-image.png');
+  }
+
+  create() {
+    // Add the background image
+    this.add.image(0, 0, 'background').setOrigin(0);
+
+    // Create the level selection grid
+    const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const gridWidth = 5;
+    const cellWidth = 80;
+    const cellHeight = 80;
+    const cellSpacing = 10;
+    const offsetX = (this.cameras.main.width - (cellWidth * gridWidth + cellSpacing * (gridWidth - 1))) / 2;
+    const offsetY = 200;
+
+    this.selectedLevel = 0;
+
+    this.levelCells = [];
+    for (let i = 0; i < levels.length; i++) {
+      const row = Math.floor(i / gridWidth);
+      const col = i % gridWidth;
+      const x = offsetX + col * (cellWidth + cellSpacing);
+      const y = offsetY + row * (cellHeight + cellSpacing);
+
+      const cell = this.add.rectangle(x, y, cellWidth, cellHeight, 0x00ff00).setStrokeStyle(4, 0x00ff00);
+      const levelText = this.add.text(x, y, levels[i], { fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
+
+      this.levelCells.push(cell);
+    }
+
+    this.updateSelectedLevel();
+
+    // Add keyboard input listeners
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.startGame, this);
+  }
+
+  update() {
+    // Handle level selection navigation
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
+      this.selectedLevel--;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
+      this.selectedLevel++;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
+      this.selectedLevel -= 5;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
+      this.selectedLevel += 5;
+      this.updateSelectedLevel();
+    }
+  }
+
+  updateSelectedLevel() {
+    this.levelCells.forEach((cell, index) => {
+      if (index === this.selectedLevel) {
+        cell.setStrokeStyle(4, 0xffa500);
+      } else {
+        cell.setStrokeStyle(4, 0x00ff00);
+      }
+    });
+  }
+
+  startGame() {
+    // Start the GameScene with the selected level
+    this.scene.start('GameScene', { level: this.selectedLevel });
+  }
+}
+```
+
+In this updated `LevelSelectionScene`:
+
+- We create a grid of level selection cells with numbers 0 to 9.
+- The level cells are arranged in two rows, with the top row having numbers 0 to 4 and the bottom row having numbers 5 to 9.
+- The selected level is highlighted with an orange border, while the other cells have a green border.
+- The player can navigate the level selection using the arrow keys: left and right to move horizontally, and up and down to move vertically between the two rows.
+- Pressing the space key starts the game with the selected level.
+
+Make sure to replace `'path/to/your/background-image.png'` with the actual path to your desired background image file.
+
+With these changes, the `LevelSelectionScene` will display the level numbers in a grid format, allow the player to navigate and select a level using the arrow keys, and highlight the currently selected level with an orange border.
+
+The selected level will be passed to the `GameScene` when the game starts, but we'll ignore it for now until we update the `GameScene` to handle the starting level selection.
+
+Please update your `LevelSelectionScene.js` file with this code and test the level selection functionality.
+
+Let me know if you have any further questions or if you need assistance with anything else!
+
+**User:**
+
+Thank you! It works, but I would like the following changes:
+
+- The squares with the numbers should be smaller probably 2 times shorter and 2 times narrower.
+- The green color of the squares should be changed to match the less vibrant, possibly darker shade present in the the original Tetris.
+- The font used for the numbers should be switched to a pixelated font that matches the retro style of the original Tetris game.
+- The border highlighting the selected level should be made thicker and more pronounced, similar to the bold orange border in the original Tetris.
+
+**Assistant:**
+
+Certainly! Let's make the requested changes to the `LevelSelectionScene` to match the style of the original Tetris game.
+
+Here's the updated `LevelSelectionScene.js` file:
+
+```javascript
+// LevelSelectionScene.js
+export default class LevelSelectionScene extends Phaser.Scene {
+  constructor() {
+    super('LevelSelectionScene');
+  }
+
+  preload() {
+    // Load the background image
+    this.load.image('background', 'path/to/your/background-image.png');
+    
+    // Load the pixelated font
+    this.load.bitmapFont('pixelFont', 'path/to/your/pixel-font.png', 'path/to/your/pixel-font.xml');
+  }
+
+  create() {
+    // Add the background image
+    this.add.image(0, 0, 'background').setOrigin(0);
+
+    // Create the level selection grid
+    const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const gridWidth = 5;
+    const cellWidth = 40;
+    const cellHeight = 40;
+    const cellSpacing = 10;
+    const offsetX = (this.cameras.main.width - (cellWidth * gridWidth + cellSpacing * (gridWidth - 1))) / 2;
+    const offsetY = 200;
+
+    this.selectedLevel = 0;
+
+    this.levelCells = [];
+    for (let i = 0; i < levels.length; i++) {
+      const row = Math.floor(i / gridWidth);
+      const col = i % gridWidth;
+      const x = offsetX + col * (cellWidth + cellSpacing);
+      const y = offsetY + row * (cellHeight + cellSpacing);
+
+      const cell = this.add.rectangle(x, y, cellWidth, cellHeight, 0x006400).setStrokeStyle(2, 0x006400);
+      const levelText = this.add.bitmapText(x, y, 'pixelFont', levels[i].toString(), 16).setOrigin(0.5);
+
+      this.levelCells.push(cell);
+    }
+
+    this.updateSelectedLevel();
+
+    // Add keyboard input listeners
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.startGame, this);
+  }
+
+  update() {
+    // Handle level selection navigation
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
+      this.selectedLevel--;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
+      this.selectedLevel++;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
+      this.selectedLevel -= 5;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
+      this.selectedLevel += 5;
+      this.updateSelectedLevel();
+    }
+  }
+
+  updateSelectedLevel() {
+    this.levelCells.forEach((cell, index) => {
+      if (index === this.selectedLevel) {
+        cell.setStrokeStyle(4, 0xffa500);
+      } else {
+        cell.setStrokeStyle(2, 0x006400);
+      }
+    });
+  }
+
+  startGame() {
+    // Start the GameScene with the selected level
+    this.scene.start('GameScene', { level: this.selectedLevel });
+  }
+}
+```
+
+In this updated `LevelSelectionScene`:
+
+- We reduced the size of the level selection squares by setting `cellWidth` and `cellHeight` to 40 pixels each.
+- The green color of the squares is changed to a darker shade (`0x006400`) to match the less vibrant style of the original Tetris game.
+- We load a pixelated font using `this.load.bitmapFont()` in the `preload` method. Make sure to provide the path to your pixel font image and XML files.
+- The level numbers are rendered using the pixelated font with a size of 16 pixels.
+- The border highlighting the selected level is made thicker by setting the stroke thickness to 4 pixels.
+
+Please make sure to provide the correct paths to your pixel font image and XML files in the `preload` method.
+
+With these changes, the level selection scene should have a more retro and pixelated appearance, resembling the style of the original Tetris game.
+
+Update your `LevelSelectionScene.js` file with this code and test the level selection functionality.
+
+Let me know if you have any further questions or if you need assistance with anything else!
+
+**User:**
+
+Thank you! 
+I want to use the yosert.ttf font for the numbers in the LevelSelectionScene. I have the yosert.ttf file in the assets folder. I added it to my assets/fonts/yosert.ttf and to fonts.ccs file.
+
+Could you rewrite LevelSelectionScene.js to use the yosert font?
+
+Here is how to load it in the preload method:
+```javascript
+// Load custom fonts using WebFontLoader
+WebFont.load({
+  custom: {
+    families: ['yoster'],
+    urls: ['assets/fonts/fonts.css']
+  },
+  active: () => {
+    this.create();
+  }
+});
+```
+
+**Assistant:**
+
+Certainly! Here's the updated `LevelSelectionScene.js` file that uses the `yoster` font for the level numbers:
+
+```javascript
+// LevelSelectionScene.js
+export default class LevelSelectionScene extends Phaser.Scene {
+  constructor() {
+    super('LevelSelectionScene');
+  }
+
+  preload() {
+    // Load the background image
+    this.load.image('background', 'path/to/your/background-image.png');
+    
+    // Load custom fonts using WebFontLoader
+    WebFont.load({
+      custom: {
+        families: ['yoster'],
+        urls: ['assets/fonts/fonts.css']
+      },
+      active: () => {
+        this.create();
+      }
+    });
+  }
+
+  create() {
+    // Add the background image
+    this.add.image(0, 0, 'background').setOrigin(0);
+
+    // Create the level selection grid
+    const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const gridWidth = 5;
+    const cellWidth = 40;
+    const cellHeight = 40;
+    const cellSpacing = 10;
+    const offsetX = (this.cameras.main.width - (cellWidth * gridWidth + cellSpacing * (gridWidth - 1))) / 2;
+    const offsetY = 200;
+
+    this.selectedLevel = 0;
+
+    this.levelCells = [];
+    for (let i = 0; i < levels.length; i++) {
+      const row = Math.floor(i / gridWidth);
+      const col = i % gridWidth;
+      const x = offsetX + col * (cellWidth + cellSpacing);
+      const y = offsetY + row * (cellHeight + cellSpacing);
+
+      const cell = this.add.rectangle(x, y, cellWidth, cellHeight, 0x006400).setStrokeStyle(2, 0x006400);
+      const levelText = this.add.text(x, y, levels[i].toString(), { fontFamily: 'yoster', fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5);
+
+      this.levelCells.push(cell);
+    }
+
+    this.updateSelectedLevel();
+
+    // Add keyboard input listeners
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.startGame, this);
+  }
+
+  update() {
+    // Handle level selection navigation
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
+      this.selectedLevel--;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
+      this.selectedLevel++;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
+      this.selectedLevel -= 5;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
+      this.selectedLevel += 5;
+      this.updateSelectedLevel();
+    }
+  }
+
+  updateSelectedLevel() {
+    this.levelCells.forEach((cell, index) => {
+      if (index === this.selectedLevel) {
+        cell.setStrokeStyle(4, 0xffa500);
+      } else {
+        cell.setStrokeStyle(2, 0x006400);
+      }
+    });
+  }
+
+  startGame() {
+    // Start the GameScene with the selected level
+    this.scene.start('GameScene', { level: this.selectedLevel });
+  }
+}
+```
+
+In this updated `LevelSelectionScene`:
+
+- We use the `WebFont.load()` function in the `preload` method to load the `yoster` font from the `assets/fonts/fonts.css` file.
+- Once the font is loaded, the `active` callback function is called, which triggers the `create()` method to set up the scene.
+- When creating the level number text, we set the `fontFamily` to `'yoster'` and the `fontSize` to `'24px'` to use the loaded font.
+
+Make sure that the `yoster.ttf` font file is correctly referenced in the `assets/fonts/fonts.css` file.
+
+With these changes, the level numbers in the `LevelSelectionScene` should now be rendered using the `yoster` font.
+
+Update your `LevelSelectionScene.js` file with this code and test the level selection functionality.
+
+Let me know if you have any further questions or if you need assistance with anything else!
+
+**User:**
+
+Thank you! Now I would like to add a 'LEVEL' label in a retro, pixelated font, positioned centrally above a grid of numbers. The label is encased within an orange-brown rectangular border, which has a slightly darker shade on its top and left sides, giving a slight 3D effect as if it's embossed or raised. The 'LEVEL' label box's placement directly above the selection grid implies its purpose as a title or header for the level selection area.
+
+**Assistant:**
+
+Certainly! Let's add the 'LEVEL' label with a retro, pixelated font and an orange-brown rectangular border above the level selection grid.
+
+Here's the updated `LevelSelectionScene.js` file:
+
+```javascript
+// LevelSelectionScene.js
+export default class LevelSelectionScene extends Phaser.Scene {
+  constructor() {
+    super('LevelSelectionScene');
+  }
+
+  preload() {
+    // Load the background image
+    this.load.image('background', 'path/to/your/background-image.png');
+    
+    // Load custom fonts using WebFontLoader
+    WebFont.load({
+      custom: {
+        families: ['yoster', 'pixel-font'],
+        urls: ['assets/fonts/fonts.css']
+      },
+      active: () => {
+        this.create();
+      }
+    });
+  }
+
+  create() {
+    // Add the background image
+    this.add.image(0, 0, 'background').setOrigin(0);
+
+    // Create the 'LEVEL' label
+    const labelWidth = 200;
+    const labelHeight = 60;
+    const labelX = this.cameras.main.centerX - labelWidth / 2;
+    const labelY = 120;
+
+    const labelBox = this.add.rectangle(labelX, labelY, labelWidth, labelHeight, 0xA52A2A)
+      .setStrokeStyle(4, 0x8B0000, 1, 1) // Darker shade on top and left sides
+      .setOrigin(0);
+
+    const labelText = this.add.text(labelX + labelWidth / 2, labelY + labelHeight / 2, 'LEVEL', {
+      fontFamily: 'pixel-font',
+      fontSize: '32px',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+
+    // Create the level selection grid
+    const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const gridWidth = 5;
+    const cellWidth = 40;
+    const cellHeight = 40;
+    const cellSpacing = 10;
+    const offsetX = (this.cameras.main.width - (cellWidth * gridWidth + cellSpacing * (gridWidth - 1))) / 2;
+    const offsetY = 200;
+
+    this.selectedLevel = 0;
+
+    this.levelCells = [];
+    for (let i = 0; i < levels.length; i++) {
+      const row = Math.floor(i / gridWidth);
+      const col = i % gridWidth;
+      const x = offsetX + col * (cellWidth + cellSpacing);
+      const y = offsetY + row * (cellHeight + cellSpacing);
+
+      const cell = this.add.rectangle(x, y, cellWidth, cellHeight, 0x006400).setStrokeStyle(2, 0x006400);
+      const levelText = this.add.text(x, y, levels[i].toString(), { fontFamily: 'yoster', fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5);
+
+      this.levelCells.push(cell);
+    }
+
+    this.updateSelectedLevel();
+
+    // Add keyboard input listeners
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.startGame, this);
+  }
+
+  update() {
+    // Handle level selection navigation
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
+      this.selectedLevel--;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
+      this.selectedLevel++;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
+      this.selectedLevel -= 5;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
+      this.selectedLevel += 5;
+      this.updateSelectedLevel();
+    }
+  }
+
+  updateSelectedLevel() {
+    this.levelCells.forEach((cell, index) => {
+      if (index === this.selectedLevel) {
+        cell.setStrokeStyle(4, 0xffa500);
+      } else {
+        cell.setStrokeStyle(2, 0x006400);
+      }
+    });
+  }
+
+  startGame() {
+    // Start the GameScene with the selected level
+    this.scene.start('GameScene', { level: this.selectedLevel });
+  }
+}
+```
+
+In this updated `LevelSelectionScene`:
+
+- We load an additional font called `'pixel-font'` using the `WebFont.load()` function in the `preload` method. Make sure to include the font file and reference it correctly in the `assets/fonts/fonts.css` file.
+- In the `create` method, we create the 'LEVEL' label using a rectangle (`labelBox`) and a text object (`labelText`).
+  - The `labelBox` is positioned above the level selection grid and has an orange-brown color (`0xA52A2A`).
+  - We apply a darker shade (`0x8B0000`) on the top and left sides of the `labelBox` using `setStrokeStyle()` to create a slight 3D effect.
+  - The `labelText` is positioned at the center of the `labelBox` and uses the `'pixel-font'` font with a size of `'32px'`.
+- The level selection grid and the rest of the code remain the same.
+
+Make sure to provide the appropriate font files and update the `assets/fonts/fonts.css` file to include the `'pixel-font'` font.
+
+With these changes, the 'LEVEL' label should appear above the level selection grid, using a retro, pixelated font and encased within an orange-brown rectangular border with a slight 3D effect.
+
+Update your `LevelSelectionScene.js` file with this code and test the level selection functionality.
+
+Let me know if you have any further questions or if you need assistance with anything else!
+
+**User:**
+
+Thank you! I would like you to centre the 'LEVEL' label above the level selection grid. The label should be positioned directly above the grid, with equal spacing on both sides and spacing between the grid and the 'LEVEL'.
+
+**Assistant:**
+
+Certainly! Let's center the 'LEVEL' label above the level selection grid with equal spacing on both sides and spacing between the grid and the 'LEVEL'.
+
+Here's the updated `LevelSelectionScene.js` file:
+
+```javascript
+// LevelSelectionScene.js
+export default class LevelSelectionScene extends Phaser.Scene {
+  constructor() {
+    super('LevelSelectionScene');
+  }
+
+  preload() {
+    // Load the background image
+    this.load.image('background', 'path/to/your/background-image.png');
+    
+    // Load custom fonts using WebFontLoader
+    WebFont.load({
+      custom: {
+        families: ['yoster', 'pixel-font'],
+        urls: ['assets/fonts/fonts.css']
+      },
+      active: () => {
+        this.create();
+      }
+    });
+  }
+
+  create() {
+    // Add the background image
+    this.add.image(0, 0, 'background').setOrigin(0);
+
+    // Create the level selection grid
+    const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const gridWidth = 5;
+    const cellWidth = 40;
+    const cellHeight = 40;
+    const cellSpacing = 10;
+    const offsetX = (this.cameras.main.width - (cellWidth * gridWidth + cellSpacing * (gridWidth - 1))) / 2;
+    const offsetY = 200;
+
+    this.selectedLevel = 0;
+
+    this.levelCells = [];
+    for (let i = 0; i < levels.length; i++) {
+      const row = Math.floor(i / gridWidth);
+      const col = i % gridWidth;
+      const x = offsetX + col * (cellWidth + cellSpacing);
+      const y = offsetY + row * (cellHeight + cellSpacing);
+
+      const cell = this.add.rectangle(x, y, cellWidth, cellHeight, 0x006400).setStrokeStyle(2, 0x006400);
+      const levelText = this.add.text(x, y, levels[i].toString(), { fontFamily: 'yoster', fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5);
+
+      this.levelCells.push(cell);
+    }
+
+    // Create the 'LEVEL' label
+    const labelWidth = (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) * 0.8; // Adjust the width as needed
+    const labelHeight = 60;
+    const labelX = offsetX + (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) / 2 - labelWidth / 2;
+    const labelY = offsetY - labelHeight - 20; // Adjust the spacing between the label and the grid
+
+    const labelBox = this.add.rectangle(labelX, labelY, labelWidth, labelHeight, 0xA52A2A)
+      .setStrokeStyle(4, 0x8B0000, 1, 1) // Darker shade on top and left sides
+      .setOrigin(0);
+
+    const labelText = this.add.text(labelX + labelWidth / 2, labelY + labelHeight / 2, 'LEVEL', {
+      fontFamily: 'pixel-font',
+      fontSize: '32px',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+
+    this.updateSelectedLevel();
+
+    // Add keyboard input listeners
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.startGame, this);
+  }
+
+  update() {
+    // Handle level selection navigation
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
+      this.selectedLevel--;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
+      this.selectedLevel++;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
+      this.selectedLevel -= 5;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
+      this.selectedLevel += 5;
+      this.updateSelectedLevel();
+    }
+  }
+
+  updateSelectedLevel() {
+    this.levelCells.forEach((cell, index) => {
+      if (index === this.selectedLevel) {
+        cell.setStrokeStyle(4, 0xffa500);
+      } else {
+        cell.setStrokeStyle(2, 0x006400);
+      }
+    });
+  }
+
+  startGame() {
+    // Start the GameScene with the selected level
+    this.scene.start('GameScene', { level: this.selectedLevel });
+  }
+}
+```
+
+In this updated `LevelSelectionScene`:
+
+- We calculate the width of the 'LEVEL' label (`labelWidth`) based on the width of the level selection grid. We multiply the grid width by a factor of 0.8 (adjust this value as needed) to make the label slightly narrower than the grid.
+- We calculate the x-coordinate of the 'LEVEL' label (`labelX`) by centering it horizontally above the level selection grid. We add the grid's x-offset (`offsetX`) to the horizontal center of the grid and subtract half of the label's width to center it.
+- We calculate the y-coordinate of the 'LEVEL' label (`labelY`) by positioning it above the level selection grid with a spacing of 20 pixels (adjust this value as needed). We subtract the label's height and the spacing from the grid's y-offset (`offsetY`).
+- The rest of the code remains the same.
+
+With these changes, the 'LEVEL' label should be centered above the level selection grid, with equal spacing on both sides and a spacing between the grid and the label.
+
+Update your `LevelSelectionScene.js` file with this code and test the level selection functionality.
+
+Let me know if you have any further questions or if you need assistance with anything else!
+
+**User:**
+
+Thank you! I did small adjustments to make it more centered.
+Here is the final code:
+```javascript
+// LevelSelectionScene.js
+export default class LevelSelectionScene extends Phaser.Scene {
+  constructor() {
+    super('LevelSelectionScene');
+  }
+
+  preload() {
+    // Load the background image
+    this.load.image('background', 'assets/images/menuSceneBackground.png');
+    
+    // Load custom fonts using WebFontLoader
+    WebFont.load({
+      custom: {
+        families: ['yoster'],
+        urls: ['assets/fonts/fonts.css']
+      },
+      active: () => {
+        this.create();
+      }
+    });
+  }
+
+  create() {
+    // Add the background image
+    this.add.image(0, 0, 'background').setOrigin(0);
+
+    // Create the level selection grid
+    const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const gridWidth = 5;
+    const cellWidth = 40;
+    const cellHeight = 40;
+    const cellSpacing = 10;
+    const offsetX = (this.cameras.main.width - (cellWidth * gridWidth + cellSpacing * (gridWidth - 1))) / 2;
+    const offsetY = 200;
+
+    this.selectedLevel = 0;
+
+    this.levelCells = [];
+    for (let i = 0; i < levels.length; i++) {
+      const row = Math.floor(i / gridWidth);
+      const col = i % gridWidth;
+      const x = offsetX + col * (cellWidth + cellSpacing);
+      const y = offsetY + row * (cellHeight + cellSpacing);
+
+      const cell = this.add.rectangle(x, y, cellWidth, cellHeight, 0x006400).setStrokeStyle(2, 0x006400);
+      const levelText = this.add.text(x, y, levels[i].toString(), { fontFamily: 'yoster', fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5);
+
+      this.levelCells.push(cell);
+    }
+
+    // Create the 'LEVEL' label
+    const labelWidth = (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) * 0.7; // Adjust the width as needed
+    const labelHeight = 60;
+    const labelX = offsetX + (cellWidth * gridWidth + cellSpacing * (gridWidth - 1)) / 2 - labelWidth / 2 - 20;
+    const labelY = offsetY - labelHeight - 40; // Adjust the spacing between the label and the grid
+
+    const labelBox = this.add.rectangle(labelX, labelY, labelWidth, labelHeight, 0xA52A2A)
+      .setStrokeStyle(4, 0x8B0000, 1, 1) // Darker shade on top and left sides
+      .setOrigin(0);
+
+    const labelText = this.add.text(labelX + labelWidth / 2, labelY + labelHeight / 2, 'LEVEL', {
+      fontFamily: 'yoster',
+      fontSize: '32px',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+
+    this.updateSelectedLevel();
+
+    // Add keyboard input listeners
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.startGame, this);
+  }
+
+  update() {
+    // Handle level selection navigation
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
+      this.selectedLevel--;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
+      this.selectedLevel++;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
+      this.selectedLevel -= 5;
+      this.updateSelectedLevel();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
+      this.selectedLevel += 5;
+      this.updateSelectedLevel();
+    }
+  }
+
+  updateSelectedLevel() {
+    this.levelCells.forEach((cell, index) => {
+      if (index === this.selectedLevel) {
+        cell.setStrokeStyle(4, 0xffa500);
+      } else {
+        cell.setStrokeStyle(2, 0x006400);
+      }
+    });
+  }
+
+  startGame() {
+    // Start the GameScene with the selected level
+    this.scene.start('GameScene', { level: this.selectedLevel });
+  }
+}
+```

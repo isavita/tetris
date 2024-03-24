@@ -97,7 +97,7 @@ export default class MenuScene extends Phaser.Scene {
         80,
         40
       );
-      this.scene.start('GameScene');
+      this.scene.start('LevelSelectionScene');
     });
 
     // Reset button color on pointer out
