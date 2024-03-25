@@ -23,6 +23,10 @@ export default class GameScene extends Phaser.Scene {
     this.selectedLevel = data.level;
   }
 
+  preload() {
+    this.load.image('gameBackground', 'assets/images/gameBackground.png');
+  }
+
   create() {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
@@ -42,6 +46,9 @@ export default class GameScene extends Phaser.Scene {
 
     // Add background color
     this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Add the background image after the background color
+    this.add.image(0, 0, 'gameBackground').setOrigin(0);
 
     // Create the lines box
     const linesBoxWidth = 160;
@@ -243,10 +250,10 @@ export default class GameScene extends Phaser.Scene {
     const cols = shape[0].length;
     const pieceColor = this.getPieceColor();
   
-    const nextBoxX = this.nextBoxX + 10;
+    const nextBoxX = this.nextBoxX;
     const nextBoxY = this.nextBoxY + 10;
   
-    const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows);
+    const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows) * 0.75;
     const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
     const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
   
