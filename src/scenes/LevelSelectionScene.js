@@ -7,7 +7,7 @@ export default class LevelSelectionScene extends Phaser.Scene {
 
   preload() {
     // Load the background image
-    this.load.image('background', 'assets/images/menuSceneBackground.png');
+    this.load.image('background', 'assets/images/levelSelectionBackground.png');
     
     // Load custom fonts using WebFontLoader
     WebFont.load({
