@@ -90,13 +90,13 @@ export default class LevelSelectionScene extends Phaser.Scene {
     if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.left) && this.selectedLevel > 0) {
       this.selectedLevel--;
       this.updateSelectedLevel();
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
+    } else if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.right) && this.selectedLevel < 9) {
       this.selectedLevel++;
       this.updateSelectedLevel();
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
+    } else if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.selectedLevel >= 5) {
       this.selectedLevel -= 5;
       this.updateSelectedLevel();
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
+    } else if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.down) && this.selectedLevel <= 4) {
       this.selectedLevel += 5;
       this.updateSelectedLevel();
     }
