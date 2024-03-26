@@ -24,14 +24,35 @@ export default class GameScene extends Phaser.Scene {
   }
 
   preload() {
+    // background image
     this.load.image('gameBackground', 'assets/images/gameBackground.png');
+
+    // sound effects
+    this.load.audio('move', 'assets/audio/move.wav');
+    this.load.audio('softDrop', 'assets/audio/soft_drop.wav');
+    this.load.audio('lineClear', 'assets/audio/line_clear.wav');
+    this.load.audio('tetrisClear', 'assets/audio/tetris_clear.wav');
+    this.load.audio('lockdown', 'assets/audio/lockdown.wav');
   }
 
   create() {
+    // debug for FPS
+    this.prevTime = performance.now();
+
+    // Set up input events
     this.cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
     this.input.keyboard.on('keydown-SHIFT', this.rotatePieceCounterclockwise, this);
     this.input.keyboard.on('keydown-P', this.togglePause, this);
+
+    // Set up sound effects
+    this.moveSound = this.sound.add('move');
+    this.softDropSound = this.sound.add('softDrop');
+    this.lineClearSound = this.sound.add('lineClear');
+    this.tetrisClearSound = this.sound.add('tetrisClear');
+    this.lockdownSound = this.sound.add('lockdown');
+
+    // Initialize the game engine
 
     this.gameEngine.init(this.selectedLevel);
 
@@ -164,6 +185,13 @@ export default class GameScene extends Phaser.Scene {
     this.frames++;
     const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
 
+    // Frame rate counter
+    const currentTime = performance.now();
+    const elapsedTime = currentTime - this.prevTime;
+    this.prevTime = currentTime;
+    const fps = Math.round(1000 / elapsedTime);
+    // console.log(`FPS: ${fps}`);
+
     // Handle left and right movement
     if (this.cursors.left.isDown) {
       this.handleDAS('left');
@@ -183,8 +211,17 @@ export default class GameScene extends Phaser.Scene {
         this.movePieceDown();
       } else {
         this.gameEngine.placePiece();
-        this.gameEngine.clearLines();
+        this.lockdownSound.play();
+        const clearedLines = this.gameEngine.clearLines();
+        console.log(`Cleared lines: ${clearedLines}`);
         this.drawBoard();
+        if (clearedLines > 0) {
+          if (clearedLines === 4) {
+            this.tetrisClearSound.play();
+          } else {
+            this.lineClearSound.play();
+          }
+        }
         this.updateScoreDisplay();
         this.updateLevelDisplay();
         this.updateLinesCountDisplay();
@@ -200,6 +237,7 @@ export default class GameScene extends Phaser.Scene {
       if (this.gameEngine.canMovePieceDown()) {
         this.clearPrevPiecePosition();
         this.gameEngine.softDrop();
+        this.softDropSound.play();
       }
     }
 
@@ -373,9 +411,11 @@ export default class GameScene extends Phaser.Scene {
     if (this.dasDirection === 'left' && this.gameEngine.canMovePieceLeft()) {
       this.clearPrevPiecePosition();
       this.gameEngine.movePieceLeft();
+      this.moveSound.play();
     } else if (this.dasDirection === 'right' && this.gameEngine.canMovePieceRight()) {
       this.clearPrevPiecePosition();
       this.gameEngine.movePieceRight();
+      this.moveSound.play();
     }
   }
 
@@ -386,6 +426,7 @@ export default class GameScene extends Phaser.Scene {
     if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
       this.clearPrevPiecePosition();
       this.gameEngine.rotatePiece(true);
+      this.moveSound.play();
     }
   }
 
@@ -396,6 +437,7 @@ export default class GameScene extends Phaser.Scene {
     if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
       this.clearPrevPiecePosition();
       this.gameEngine.rotatePiece(false);
+      this.moveSound.play();
     }
   }
 

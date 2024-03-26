@@ -298,6 +298,8 @@ export default class GameEngine {
       this.totalLinesCleared += linesCleared;
       this.updateLevel();
     }
+
+    return linesCleared;
   }
 
   updateScore(linesCleared) {

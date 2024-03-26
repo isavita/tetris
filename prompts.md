@@ -15780,3 +15780,757 @@ This project is licensed under the [MIT License](LICENSE).
 Feel free to customize and enhance the `README.md` file based on your specific project details, additional features, or any other relevant information you want to include.
 
 Remember to replace `[Your Name]` with your actual name, and if you have a screenshot of your game, you can add it to the project directory and update the `![Tetris Game Screenshot](screenshot.png)` line with the actual filename of your screenshot.
+
+**User:**
+
+Here is my GamScene.js code
+```javascript
+// GameScene.js
+import GameEngine from "./GameEngine.js";
+
+export default class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+    this.gameEngine = new GameEngine();
+    this.selectedLevel = 0;
+    this.frames = 0;
+    this.blockSize = 15;
+    this.cursors = null;
+    this.dasDelay = 16;
+    this.dasInterval = 6;
+    this.dasTimer = 0;
+    this.dasDirection = null;
+    this.isFastFalling = false;
+    this.fastFallInterval = 2;
+    this.isPaused = false;
+    this.boarderColor = 0xffffff;
+  }
+
+  init(data) {
+    this.selectedLevel = data.level;
+  }
+
+  preload() {
+    this.load.image('gameBackground', 'assets/images/gameBackground.png');
+  }
+
+  create() {
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', this.rotatePieceClockwise, this);
+    this.input.keyboard.on('keydown-SHIFT', this.rotatePieceCounterclockwise, this);
+    this.input.keyboard.on('keydown-P', this.togglePause, this);
+
+    this.gameEngine.init(this.selectedLevel);
+
+    const { width, height } = this.cameras.main;
+    const boardWidth = 10;
+    const boardHeight = 20;
+    const gameWidth = boardWidth * this.blockSize;
+    const gameHeight = boardHeight * this.blockSize;
+    const offsetX = (width - gameWidth) / 2;
+    const offsetY = 20;
+    const gap = 20;
+
+    // Add background color
+    this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
+
+    // Add the background image after the background color
+    this.add.image(0, 0, 'gameBackground').setOrigin(0);
+
+    // Create the lines box
+    const linesBoxWidth = 160;
+    const linesBoxHeight = 30;
+    const linesBoxX = offsetX;
+    const linesBoxY = offsetY;
+    this.add.rectangle(linesBoxX, linesBoxY, linesBoxWidth, linesBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const linesTextColor = '#ffffff';
+    const linesTextSize = '18px';
+    const paddedLinesCount = String(this.gameEngine.linesCleared).padStart(3, '0');
+    const linesText = ` LINES - ${paddedLinesCount}`;
+    this.linesCountText = this.add.text(linesBoxX + 10, linesBoxY + 7, linesText, {
+      fontFamily: 'Courier New',
+      fontSize: linesTextSize,
+      fill: linesTextColor,
+    }).setOrigin(0);
+
+    // Create the game board
+    const borderThickness = 2;
+    const gameBoardX = linesBoxX + borderThickness;
+    const gameBoardY = linesBoxY + linesBoxHeight + gap + borderThickness;
+    this.gameBoardX = gameBoardX;
+    this.gameBoardY = gameBoardY;
+    this.add.grid(
+      gameBoardX,
+      gameBoardY,
+      gameWidth,
+      gameHeight,
+      this.blockSize,
+      this.blockSize,
+      0x0000ff,
+      0,
+      0xffffff,
+      1
+    ).setOrigin(0);
+
+    // Draw a border around the game board
+    const border = this.add.graphics();
+    border.lineStyle(borderThickness, 0xffffff, 1);
+    border.strokeRect(
+      gameBoardX - borderThickness,
+      gameBoardY - borderThickness,
+      gameWidth + borderThickness * 2,
+      gameHeight + borderThickness * 2
+    );
+
+    // Create the score box
+    const scoreBoxWidth = 100;
+    const scoreBoxHeight = 80;
+    const scoreBoxX = gameBoardX + gameWidth + gap;
+    const scoreBoxY = gameBoardY;
+    this.add.rectangle(scoreBoxX, scoreBoxY, scoreBoxWidth, scoreBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const scoreTextColor = '#ffffff';
+    const scoreTextSize = '14px';
+    this.add.text(scoreBoxX + 10, scoreBoxY + 10, 'SCORE', {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+    const paddedCurrentScore = String(this.gameEngine.score).padStart(7, '0');
+    this.scoreValue = this.add.text(scoreBoxX + 10, scoreBoxY + 40, paddedCurrentScore, {
+      fontFamily: 'Courier New',
+      fontSize: scoreTextSize,
+      fill: scoreTextColor,
+    }).setOrigin(0);
+
+    // Create the next box
+    this.nextBoxWidth = scoreBoxWidth;
+    this.nextBoxHeight = 80;
+    this.nextBoxX = scoreBoxX;
+    this.nextBoxY = scoreBoxY + scoreBoxHeight + gap;
+    this.add.rectangle(this.nextBoxX, this.nextBoxY, this.nextBoxWidth, this.nextBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const nextTextColor = '#ffffff';
+    const nextTextSize = '14px';
+    this.add.text(this.nextBoxX + this.nextBoxWidth / 2, this.nextBoxY + 10, 'NEXT', {
+      fontFamily: 'Courier New',
+      fontSize: nextTextSize,
+      fill: nextTextColor,
+    }).setOrigin(0.5);
+    this.nextPreviewGraphics = this.add.graphics();
+    this.drawNextPiecePreview();
+
+    // Create the level box
+    const levelBoxWidth = scoreBoxWidth;
+    const levelBoxHeight = 50;
+    const levelBoxX = this.nextBoxX;
+    const levelBoxY = this.nextBoxY + this.nextBoxHeight + gap;
+    this.add.rectangle(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight, 0xffffff, 0.2).setOrigin(0);
+    const levelTextColor = '#ffffff';
+    const levelTextSize = '14px';
+    this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 10, 'LEVEL', {
+      fontFamily: 'Courier New',
+      fontSize: levelTextSize,
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+    const levelStr = String(this.gameEngine.level);
+    this.levelValue = this.add.text(levelBoxX + levelBoxWidth / 2, levelBoxY + 35, levelStr, {
+      fontFamily: 'Courier New',
+      fontSize: '18px',
+      fill: levelTextColor,
+    }).setOrigin(0.5);
+
+    // Draw the game board
+    this.drawBoard();
+    this.drawCurrentPiece();
+  }
+
+  update() {
+    if (this.isPaused || this.gameEngine.isGameOver()) {
+      return;
+    }
+
+    this.frames++;
+    const framesPerGridCell = this.gameEngine.getFramesPerGridCell();
+
+    // Handle left and right movement
+    if (this.cursors.left.isDown) {
+      this.handleDAS('left');
+    } else if (this.cursors.right.isDown) {
+      this.handleDAS('right');
+    } else {
+      this.dasDirection = null;
+    }
+
+    // Handle fast falling
+    this.isFastFalling = this.cursors.down.isDown;
+
+    if (this.frames >= framesPerGridCell) {
+      this.frames = 0;
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.movePieceDown();
+      } else {
+        this.gameEngine.placePiece();
+        this.gameEngine.clearLines();
+        this.drawBoard();
+        this.updateScoreDisplay();
+        this.updateLevelDisplay();
+        this.updateLinesCountDisplay();
+        this.drawNextPiecePreview();
+        if (this.gameEngine.isGameOver()) {
+          this.displayGameOverMessage();
+        }
+        this.isFastFalling = false;
+      }
+    }
+
+    if (this.isFastFalling && this.frames % this.fastFallInterval === 0) {
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.gameEngine.softDrop();
+      }
+    }
+
+    this.drawCurrentPiece();
+  }
+
+  updateScoreDisplay() {
+    const paddedCurrentScore = String(this.gameEngine.score).padStart(7, '0');
+    this.scoreValue.setText(paddedCurrentScore);
+  }
+
+  updateLevelDisplay() {
+    const levelStr = String(this.gameEngine.level);
+    this.levelValue.setText(levelStr);
+  }
+
+  updateLinesCountDisplay() {
+    const paddedLinesCount = String(this.gameEngine.linesCleared).padStart(3, '0');
+    const linesText = ` LINES - ${paddedLinesCount}`;
+    this.linesCountText.setText(linesText);
+  }
+
+  drawBoard() {
+    const { board } = this.gameEngine;
+    const rows = board.length;
+    const cols = board[0].length;
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const colorValue = board[row][col];
+        const blockX = this.gameBoardX + col * this.blockSize;
+        const blockY = this.gameBoardY + row * this.blockSize;
+  
+        if (colorValue !== 0) {
+          const pieceColor = this.getPieceColorByLevel(colorValue);
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+        } else {
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  drawNextPiecePreview() {
+    const { nextPiece } = this.gameEngine;
+    const { shape } = nextPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const pieceColor = this.getPieceColor();
+  
+    const nextBoxX = this.nextBoxX;
+    const nextBoxY = this.nextBoxY + 10;
+  
+    const blockSize = Math.min((this.nextBoxWidth - 20) / cols, (this.nextBoxHeight - 20) / rows) * 0.75;
+    const offsetX = (this.nextBoxWidth - cols * blockSize) / 2;
+    const offsetY = (this.nextBoxHeight - rows * blockSize) / 2;
+  
+    this.nextPreviewGraphics.clear();
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = nextBoxX + offsetX + col * blockSize;
+          const blockY = nextBoxY + offsetY + row * blockSize;
+          this.nextPreviewGraphics.fillStyle(pieceColor);
+          this.nextPreviewGraphics.fillRect(blockX, blockY, blockSize, blockSize);
+          this.nextPreviewGraphics.lineStyle(1, this.boarderColor, 0.8);
+          this.nextPreviewGraphics.strokeRect(blockX, blockY, blockSize, blockSize);
+        }
+      }
+    }
+  }
+
+  getPieceColorByLevel(level) {
+    const adjustedLevel = level - 1;
+    const colorIndex = Math.floor(adjustedLevel / 5) % 4;
+  
+    const colors = [
+      0xff0000, // Red
+      0x005700, // Green
+      0x0000ff, // Blue
+      0xffa500, // Orange
+    ];
+  
+    return colors[colorIndex];
+  }
+  getColorForPiece(value) {
+    const colors = {
+      1: 0xff0000,
+      2: 0x005700,
+      3: 0x0000ff,
+    };
+
+    return colors[value] || 0xffffff;
+  }
+
+  getPieceColor() {
+    const { level } = this.gameEngine;
+    const colorIndex = Math.floor(level / 5) % 4;
+  
+    const colors = [
+      0xff0000, // Red
+      0x005700, // Green
+      0x0000ff, // Blue
+      0xffa500, // Orange
+    ];
+  
+    return colors[colorIndex];
+  }
+
+  drawCurrentPiece() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const pieceColor = this.getPieceColor();
+  
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = this.gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = this.gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, pieceColor).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  movePieceDown() {
+    const { currentPiece } = this.gameEngine;
+    currentPiece.position.y++;
+  }
+
+  clearPrevPiecePosition() {
+    const { currentPiece } = this.gameEngine;
+    const { shape, position } = currentPiece;
+    const rows = shape.length;
+    const cols = shape[0].length;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (shape[row][col]) {
+          const blockX = this.gameBoardX + (position.x + col) * this.blockSize;
+          const blockY = this.gameBoardY + (position.y + row) * this.blockSize;
+          this.add.rectangle(blockX, blockY, this.blockSize, this.blockSize, 0x000000).setOrigin(0);
+        }
+      }
+    }
+  }
+
+  handleDAS(direction) {
+    if (this.dasDirection !== direction) {
+      this.dasTimer = 0;
+      this.dasDirection = direction;
+    }
+
+    if (this.dasTimer === 0) {
+      this.movePieceHorizontally();
+    }
+
+    this.dasTimer++;
+
+    if (this.dasTimer >= this.dasDelay) {
+      if ((this.dasTimer - this.dasDelay) % this.dasInterval === 0) {
+        this.movePieceHorizontally();
+      }
+    }
+  }
+
+  movePieceHorizontally() {
+    if (this.dasDirection === 'left' && this.gameEngine.canMovePieceLeft()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceLeft();
+    } else if (this.dasDirection === 'right' && this.gameEngine.canMovePieceRight()) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.movePieceRight();
+    }
+  }
+
+  rotatePieceClockwise() {
+    const rotatedShape = this.gameEngine.getRotatedShape(true);
+    const { x, y } = this.gameEngine.currentPiece.position;
+
+    if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.rotatePiece(true);
+    }
+  }
+
+  rotatePieceCounterclockwise() {
+    const rotatedShape = this.gameEngine.getRotatedShape(false);
+    const { x, y } = this.gameEngine.currentPiece.position;
+
+    if (!this.gameEngine.checkCollisionRotation(rotatedShape, x, y)) {
+      this.clearPrevPiecePosition();
+      this.gameEngine.rotatePiece(false);
+    }
+  }
+
+  togglePause() {
+    this.isPaused = !this.isPaused;
+  
+    if (this.isPaused) {
+      this.displayPauseMessage();
+    } else {
+      this.hidePauseMessage();
+    }
+  }
+  
+  displayPauseMessage() {
+    const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+    const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+  
+    this.pauseMessage = this.add.text(
+      gameBoardCenterX,
+      gameBoardCenterY,
+      'Game Paused',
+      {
+        fontFamily: 'Arial',
+        fontSize: '18px',
+        fill: '#ffffff',
+      }
+    ).setOrigin(0.5);
+  }
+  hidePauseMessage() {
+    if (this.pauseMessage) {
+      this.pauseMessage.destroy();
+      this.pauseMessage = null;
+    }
+  }
+
+  displayGameOverMessage() {
+    const gameBoardCenterX = this.gameBoardX + (10 * this.blockSize) / 2;
+    const gameBoardCenterY = this.gameBoardY + (20 * this.blockSize) / 2;
+  
+    this.gameOverMessage = this.add.text(
+      gameBoardCenterX,
+      gameBoardCenterY,
+      'Game Over\nPress SPACE to restart',
+      {
+        fontFamily: 'Arial',
+        fontSize: '18px',
+        fill: '#ffffff',
+        align: 'center',
+      }
+    ).setOrigin(0.5);
+  
+    this.input.keyboard.once('keydown-SPACE', this.restartGame, this);
+  }
+  
+  restartGame() {
+    this.gameEngine = new GameEngine();
+    this.scene.start('LevelSelectionScene');
+  }
+}
+```
+
+I have problem with the speed of the game. It seems normal but it gets slower when there more pieces on the board. Is there some bug with the drawing of the pieces or the board?
+Could I add some optimization of the code that would help with this issue?
+
+Probably add some easy way to check in the console how many frames are being drawn per second.
+
+**Assistant:**
+
+The performance issue you're experiencing is likely due to the way the game board and pieces are being drawn. In your current code, you're creating new rectangle objects for each block of the game board and the current piece in every frame. This can lead to a large number of draw calls and impact the performance, especially as the number of pieces on the board increases.
+
+To optimize the code and improve the performance, you can consider the following:
+
+1. Use a single graphics object for the game board and update its contents instead of creating new rectangle objects for each block.
+
+2. Use a separate graphics object for the current piece and update its position instead of creating new rectangle objects for each block of the piece.
+
+3. Implement a frame rate counter to monitor the performance and identify any bottlenecks.
+
+Here are the changes you can make to your code:
+
+1. Update the `drawBoard` method to use a single graphics object:
+
+```javascript
+drawBoard() {
+  const { board } = this.gameEngine;
+  const rows = board.length;
+  const cols = board[0].length;
+
+  if (!this.boardGraphics) {
+    this.boardGraphics = this.add.graphics();
+  }
+
+  this.boardGraphics.clear();
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const colorValue = board[row][col];
+      const blockX = this.gameBoardX + col * this.blockSize;
+      const blockY = this.gameBoardY + row * this.blockSize;
+
+      if (colorValue !== 0) {
+        const pieceColor = this.getPieceColorByLevel(colorValue);
+        this.boardGraphics.fillStyle(pieceColor);
+        this.boardGraphics.fillRect(blockX, blockY, this.blockSize, this.blockSize);
+      }
+    }
+  }
+}
+```
+
+2. Update the `drawCurrentPiece` method to use a separate graphics object:
+
+```javascript
+drawCurrentPiece() {
+  const { currentPiece } = this.gameEngine;
+  const { shape, position } = currentPiece;
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const pieceColor = this.getPieceColor();
+
+  if (!this.currentPieceGraphics) {
+    this.currentPieceGraphics = this.add.graphics();
+  }
+
+  this.currentPieceGraphics.clear();
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (shape[row][col]) {
+        const blockX = position.x + col;
+        const blockY = position.y + row;
+        this.currentPieceGraphics.fillStyle(pieceColor);
+        this.currentPieceGraphics.fillRect(
+          this.gameBoardX + blockX * this.blockSize,
+          this.gameBoardY + blockY * this.blockSize,
+          this.blockSize,
+          this.blockSize
+        );
+      }
+    }
+  }
+}
+```
+
+3. Add a frame rate counter to the `update` method:
+
+```javascript
+update() {
+  // ...
+
+  // Frame rate counter
+  const currentTime = performance.now();
+  const elapsedTime = currentTime - this.prevTime;
+  this.prevTime = currentTime;
+  const fps = Math.round(1000 / elapsedTime);
+  console.log(`FPS: ${fps}`);
+
+  // ...
+}
+```
+
+Make sure to initialize `this.prevTime` in the `create` method:
+
+```javascript
+create() {
+  // ...
+  this.prevTime = performance.now();
+  // ...
+}
+```
+
+With these optimizations, the game should perform better, especially when there are many pieces on the board. The frame rate counter will help you monitor the performance and identify any remaining bottlenecks.
+
+Remember to profile and test the game on different devices to ensure optimal performance across different hardware configurations.
+
+**User:**
+
+Thank you! It seems like the game speed was anyway okay. I added only the frame rate counter.
+I will like to add some sound effects to the game.
+Here is list of in-game events that I would like to add sound effects to:
+- Tetrimino Movement: A "clicking" sound is heard when a tetromino (piece) is moved horizontally or rotated.
+- Soft Drop: A higher-pitched clicking sound is heard when a tetromino is soft-dropped (quickly moved downward).
+- Line Clear: A "whoosh" sound effect plays when a line is cleared.
+- Tetris Clear: A unique sound effect, different from the standard line clear sound, is heard when a Tetris (four lines cleared at once) is achieved.
+- Lockdown: A "thud" sound is heard when a tetromino locks into place at the bottom of the board or on top of another piece.
+
+**Assistant:**
+
+To add sound effects to your Tetris game, you'll need to preload the sound files and then trigger them at the appropriate moments. Here's how you can add the sound effects you mentioned:
+
+1. Preload the sound files in the `preload` method of your `GameScene`:
+
+```javascript
+preload() {
+  // ...
+  this.load.audio('move', 'assets/sounds/move.wav');
+  this.load.audio('softDrop', 'assets/sounds/soft_drop.wav');
+  this.load.audio('lineClear', 'assets/sounds/line_clear.wav');
+  this.load.audio('tetrisClear', 'assets/sounds/tetris_clear.wav');
+  this.load.audio('lockdown', 'assets/sounds/lockdown.wav');
+  // ...
+}
+```
+
+Make sure to have the corresponding sound files in the specified paths.
+
+2. Create sound objects in the `create` method:
+
+```javascript
+create() {
+  // ...
+  this.moveSound = this.sound.add('move');
+  this.softDropSound = this.sound.add('softDrop');
+  this.lineClearSound = this.sound.add('lineClear');
+  this.tetrisClearSound = this.sound.add('tetrisClear');
+  this.lockdownSound = this.sound.add('lockdown');
+  // ...
+}
+```
+
+3. Trigger the sound effects at the appropriate moments:
+
+- Tetrimino Movement:
+  - In the `movePieceHorizontally` method, add:
+    ```javascript
+    this.moveSound.play();
+    ```
+  - In the `rotatePieceClockwise` and `rotatePieceCounterclockwise` methods, add:
+    ```javascript
+    this.moveSound.play();
+    ```
+
+- Soft Drop:
+  - In the `update` method, where you handle fast falling, add:
+    ```javascript
+    if (this.isFastFalling && this.frames % this.fastFallInterval === 0) {
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.gameEngine.softDrop();
+        this.softDropSound.play();
+      }
+    }
+    ```
+
+- Line Clear:
+  - In the `update` method, after clearing lines, add:
+    ```javascript
+    const clearedLines = this.gameEngine.clearLines();
+    if (clearedLines > 0) {
+      if (clearedLines === 4) {
+        this.tetrisClearSound.play();
+      } else {
+        this.lineClearSound.play();
+      }
+    }
+    ```
+
+- Lockdown:
+  - In the `update` method, where you place the piece, add:
+    ```javascript
+    if (this.frames >= framesPerGridCell) {
+      this.frames = 0;
+      if (this.gameEngine.canMovePieceDown()) {
+        this.clearPrevPiecePosition();
+        this.movePieceDown();
+      } else {
+        this.gameEngine.placePiece();
+        this.lockdownSound.play();
+        // ...
+      }
+    }
+    ```
+
+With these changes, the specified sound effects will be triggered at the appropriate moments during gameplay.
+
+Remember to adjust the sound file paths and names according to your project structure and the actual sound files you're using.
+
+**User:**
+
+Thank you! I changed the path to the `.wav` files to be `assets/audio/*.wav`.
+The only part that it doesn't work is `const clearedLines = this.gameEngine.clearLines();` when I add `const clearedLines = this.gameEngine.clearLines();` under it `console.log(`Cleared lines: ${clearedLines}`);` I am getting `Cleared lines: undefined` even when I clear some lines. Could you help me with this?
+
+Here is the code of clearLines method in GameEngine.js file:
+```javascript
+  clearLines() {
+    let linesCleared = 0;
+
+    for (let row = this.board.length - 1; row >= 0; row--) {
+      if (this.board[row].every(cell => cell !== 0)) {
+        this.board.splice(row, 1);
+        this.board.unshift(Array(this.board[0].length).fill(0));
+        linesCleared++;
+        row++; // Re-check the current row after shifting the lines down
+      }
+    }
+
+    if (linesCleared > 0) {
+      this.updateScore(linesCleared);
+      this.linesCleared += linesCleared;
+      this.totalLinesCleared += linesCleared;
+      this.updateLevel();
+    }
+  }
+```
+
+**Assistant:**
+
+I see the issue. The `clearLines` method in your `GameEngine` class doesn't return the number of cleared lines. To fix this, you can modify the `clearLines` method to return the `linesCleared` value. Here's the updated code for the `clearLines` method:
+
+```javascript
+clearLines() {
+  let linesCleared = 0;
+
+  for (let row = this.board.length - 1; row >= 0; row--) {
+    if (this.board[row].every(cell => cell !== 0)) {
+      this.board.splice(row, 1);
+      this.board.unshift(Array(this.board[0].length).fill(0));
+      linesCleared++;
+      row++; // Re-check the current row after shifting the lines down
+    }
+  }
+
+  if (linesCleared > 0) {
+    this.updateScore(linesCleared);
+    this.linesCleared += linesCleared;
+    this.totalLinesCleared += linesCleared;
+    this.updateLevel();
+  }
+
+  return linesCleared;
+}
+```
+
+Now, the `clearLines` method will return the number of lines cleared.
+
+In your `GameScene` class, you can use the returned value to determine which sound effect to play:
+
+```javascript
+const clearedLines = this.gameEngine.clearLines();
+console.log(`Cleared lines: ${clearedLines}`);
+
+if (clearedLines > 0) {
+  if (clearedLines === 4) {
+    this.tetrisClearSound.play();
+  } else {
+    this.lineClearSound.play();
+  }
+}
+```
+
+With these changes, the `clearedLines` variable will hold the correct number of cleared lines, and the appropriate sound effect will be played based on the number of lines cleared.
